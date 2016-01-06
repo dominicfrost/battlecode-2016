@@ -1,8 +1,8 @@
-package examplefuncsplayer;
+package davesbot;
 
 import battlecode.common.*;
 
-public class TTM {
+public class GUARD {
 
     public static void doTurn(RobotController rc) throws GameActionException {
 

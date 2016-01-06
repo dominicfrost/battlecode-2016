@@ -1,8 +1,8 @@
-package examplefuncsplayer;
+package davesbot;
 
 import battlecode.common.*;
 
-public class VIPER {
+public class TTM {
 
     public static void doTurn(RobotController rc) throws GameActionException {
 
@@ -11,7 +11,9 @@ public class VIPER {
     public static void execute(RobotController rc) {
         while (true) {
             try {
-                doTurn(rc);
+                if (rc.isCoreReady()) {
+                    doTurn(rc);
+                }
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
