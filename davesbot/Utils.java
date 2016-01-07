@@ -19,7 +19,6 @@ public class Utils {
 
     public static Signal[] getArchonSignals() {
         RobotController rc = RobotPlayer.rc;
-        System.out.println(rc);
         Signal[] signals = rc.emptySignalQueue();
 
         Signal[] toReturn = new Signal[6];
@@ -37,7 +36,6 @@ public class Utils {
     }
 
     public static boolean attackGoalIfPossible(Signal[] signals) throws GameActionException {
-        RobotController rc = RobotPlayer.rc;
         int[] payload;
         MapLocation sigLoc;
         for (Signal signal: signals) {
@@ -45,10 +43,11 @@ public class Utils {
                 break;
             }
             payload = signal.getMessage();
-            sigLoc = signal.getLocation();
+            sigLoc = new MapLocation(payload[0], payload[1]);
 
             // if the archon is brodcastin an attack location
-            if (!sigLoc.equals(new MapLocation(payload[0], payload[1]))) {
+
+            if (!signal.getTeam().equals(RobotPlayer.myTeam)) {
                 if (attack(sigLoc)) return true;
             }
         }
@@ -57,21 +56,19 @@ public class Utils {
     }
 
     public static MapLocation readRallyLocation(MapLocation myLocation, Signal[] signals) {
-        RobotController rc = RobotPlayer.rc;
         int minDist = Integer.MAX_VALUE;
         int dist;
-        int[] msg;
         MapLocation toReturn = new MapLocation(0,0);
-
+        MapLocation loc;
         for (Signal signal: signals) {
             if (signal == null) {
                 return toReturn;
             }
-            msg = signal.getMessage();
-            dist = myLocation.distanceSquaredTo(new MapLocation(msg[0], msg[1]));
+            loc = signal.getLocation();
+            dist = myLocation.distanceSquaredTo(loc);
             if (dist < minDist) {
                 minDist = dist;
-                toReturn = new MapLocation(msg[0], msg[1]);
+                toReturn = loc;
             }
         }
 

@@ -35,6 +35,7 @@ public class RobotPlayer {
         enemyTeam = myTeam.opponent();
         rt = rc.getType();
         maxSignalRange = rt.sensorRadiusSquared * 2 - 1;
+        rc.emptySignalQueue();
 
 
         switch (rt) {
@@ -45,13 +46,13 @@ public class RobotPlayer {
                 VIPER.execute(rc);
                 break;
             case ARCHON:
-                ARCHON.execute(rc);
+                ARCHON.execute();
                 break;
             case SOLDIER:
-                SOLDIER.execute(rc);
+                SOLDIER.execute();
                 break;
             case TURRET:
-                TURRET.execute(rc);
+                TURRET.execute();
                 break;
             case TTM:
                 TTM.execute(rc);

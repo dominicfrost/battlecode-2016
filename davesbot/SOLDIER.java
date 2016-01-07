@@ -18,7 +18,7 @@ public class SOLDIER {
         if (Utils.attackGoalIfPossible(signals)) return;
 
         for (RobotInfo r: nearbyRobots) {
-            if (r.team != RobotPlayer.myTeam && Utils.attack(r.location)) return;
+            if (r.team != RobotPlayer.myTeam && r.team != Team.NEUTRAL && Utils.attack(r.location)) return;
         }
 
 
@@ -26,15 +26,18 @@ public class SOLDIER {
         Direction toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(goal));
         if (toMove != Direction.NONE) {
             rc.move(toMove);
+            return;
         }
     }
 
-    public static void execute(RobotController _rc) {
-        rc = _rc;
+    public static void execute() {
+        rc = RobotPlayer.rc;
         while (true) {
             try {
                 if (rc.isCoreReady()) {
                     doTurn();
+                } else {
+                    rc.emptySignalQueue();
                 }
                 Clock.yield();
             } catch (Exception e) {
