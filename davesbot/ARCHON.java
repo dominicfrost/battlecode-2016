@@ -97,7 +97,7 @@ public class ARCHON {
     }
 
     public static boolean randomMove() throws GameActionException {
-        Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[RobotPlayer.rand.nextInt()%(RobotPlayer.directions.length-1)]);
+        Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt())%RobotPlayer.directions.length]);
         if (d != Direction.NONE) {
             rc.move(d);
             return true;
