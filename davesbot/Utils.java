@@ -7,6 +7,16 @@ import java.awt.*;
 
 public class Utils {
 
+    public static boolean attack(MapLocation loc) throws GameActionException {
+        RobotController rc = RobotPlayer.rc;
+        if (rc.isWeaponReady() && rc.canAttackLocation(loc)) {
+            rc.attackLocation(loc);
+            return true;
+        }
+
+        return false;
+    }
+
     public static Signal[] getArchonSignals() {
         RobotController rc = RobotPlayer.rc;
         System.out.println(rc);
@@ -39,10 +49,7 @@ public class Utils {
 
             // if the archon is brodcastin an attack location
             if (!sigLoc.equals(new MapLocation(payload[0], payload[1]))) {
-                if (rc.canAttackLocation(sigLoc)) {
-                    rc.attackLocation(sigLoc);
-                    return true;
-                }
+                if (attack(sigLoc)) return true;
             }
         }
 

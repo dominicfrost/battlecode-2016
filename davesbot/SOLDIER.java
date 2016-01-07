@@ -18,10 +18,7 @@ public class SOLDIER {
         if (Utils.attackGoalIfPossible(signals)) return;
 
         for (RobotInfo r: nearbyRobots) {
-            if (rc.canAttackLocation(r.location)) {
-                rc.attackLocation(r.location);
-                return;
-            }
+            if (r.team != RobotPlayer.myTeam && Utils.attack(r.location)) return;
         }
 
 

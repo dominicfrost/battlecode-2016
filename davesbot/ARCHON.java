@@ -45,7 +45,7 @@ public class ARCHON {
 
     public static void updateRallyLocation() throws GameActionException {
         for (RobotInfo r: nearbyRobots) {
-            if (myLocation.distanceSquaredTo(r.location) <= r.type.attackRadiusSquared) {
+            if (r.team != RobotPlayer.myTeam && myLocation.distanceSquaredTo(r.location) <= r.type.attackRadiusSquared) {
                 rc.broadcastMessageSignal(r.location.x, r.location.y, RobotPlayer.maxSignalRange);
                 return;
             }
