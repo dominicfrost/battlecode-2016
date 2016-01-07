@@ -47,7 +47,7 @@ public class Utils {
 
             // if the archon is brodcastin an attack location
 
-            if (!signal.getTeam().equals(RobotPlayer.myTeam)) {
+            if (!signal.getTeam().equals(RobotPlayer.myTeam) && !sigLoc.equals(signal.getLocation())) {
                 if (attack(sigLoc)) return true;
             }
         }

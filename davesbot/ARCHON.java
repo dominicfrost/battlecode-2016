@@ -112,7 +112,7 @@ public class ARCHON {
         double diff;
 
         for (RobotInfo r: nearbyRobots) {
-            if (r.team != RobotPlayer.myTeam || r.team != Team.NEUTRAL) {
+            if (r.team != RobotPlayer.myTeam && r.team != Team.NEUTRAL) {
                 diff = myLocation.distanceSquaredTo(r.location);
                 if  (diff < closest) {
                     closestLoc = r.location;
