@@ -11,6 +11,9 @@ public class ARCHON {
         nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
 
+        // tell errone who to kill
+        updateRallyLocation();
+
         // flee if necessary
         if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
             Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
@@ -19,9 +22,9 @@ public class ARCHON {
                 return;
             }
 
-            toMove = Utils.dirToLeastDamage(rc, nearbyRobots, myLocation);
+            toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH);
             if (toMove != Direction.NONE) {
-                rc.move(Utils.dirToLeastDamage(rc, nearbyRobots, myLocation));
+                rc.move(Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH));
                 return;
             }
 
@@ -38,6 +41,17 @@ public class ARCHON {
         }
 
         return false;
+    }
+
+    public static void updateRallyLocation() throws GameActionException {
+        for (RobotInfo r: nearbyRobots) {
+            if (myLocation.distanceSquaredTo(r.location) <= r.type.attackRadiusSquared) {
+                rc.broadcastMessageSignal(r.location.x, r.location.y, RobotPlayer.maxSignalRange);
+                return;
+            }
+        }
+
+        rc.broadcastMessageSignal(myLocation.x, myLocation.y, RobotPlayer.maxSignalRange);
     }
 
     public static boolean spawnInDirection(RobotType type) throws GameActionException {
