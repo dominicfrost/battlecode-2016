@@ -43,7 +43,7 @@ public class ARCHON {
         MapLocation lowestHealthLocation = null;
 
         for (RobotInfo r: nearbyRobots) {
-            if (r.team == RobotPlayer.myTeam && myLocation.distanceSquaredTo(r.location) <= RobotPlayer.rt.attackRadiusSquared && r.health < lowestHealth && r.type != RobotType.ARCHON) {
+            if (r.team == RobotPlayer.myTeam && myLocation.distanceSquaredTo(r.location) <= RobotPlayer.rt.attackRadiusSquared && r.health < lowestHealth && r.type != RobotType.ARCHON && r.health != r.type.maxHealth) {
                 lowestHealthLocation = r.location;
                 lowestHealth = r.health;
             }
@@ -97,7 +97,7 @@ public class ARCHON {
     }
 
     public static boolean randomMove() throws GameActionException {
-        Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[RobotPlayer.rand.nextInt()%RobotPlayer.directions.length]);
+        Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[RobotPlayer.rand.nextInt()%(RobotPlayer.directions.length-1)]);
         if (d != Direction.NONE) {
             rc.move(d);
             return true;
