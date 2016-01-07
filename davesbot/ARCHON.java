@@ -35,6 +35,7 @@ public class ARCHON {
         if (activate()) return;
         if (spawn()) return;
         if (repair()) return;
+        if (randomMove()) return;
     }
 
     public static boolean repair() throws GameActionException {
@@ -92,6 +93,16 @@ public class ARCHON {
                 }
             }
         }
+        return false;
+    }
+
+    public static boolean randomMove() throws GameActionException {
+        Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[RobotPlayer.rand.nextInt()%RobotPlayer.directions.length]);
+        if (d != Direction.NONE) {
+            rc.move(d);
+            return true;
+        }
+
         return false;
     }
 
