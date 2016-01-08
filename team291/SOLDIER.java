@@ -17,11 +17,20 @@ public class SOLDIER {
         rallyLocation = Utils.readRallyLocation(myLocation, signals);
 
         if (Utils.attackGoalIfPossible(signals)) return;
+        if (attackAnythingClose()) return;
+        if (moveToRally()) return;
+        if (mineAllTheThings()) return;
+    }
 
+    public static boolean attackAnythingClose() throws GameActionException {
         for (RobotInfo r: nearbyRobots) {
-            if (r.team != RobotPlayer.myTeam && r.team != Team.NEUTRAL && Utils.attack(r.location)) return;
+            if (r.team != RobotPlayer.myTeam && r.team != Team.NEUTRAL && Utils.attack(r.location)) return true;
         }
 
+        return false;
+    }
+
+    public static boolean moveToRally() throws GameActionException {
         MapLocation goal = Utils.readRallyLocation(myLocation, signals);
         if (!goal.equals(EMPTY_MAP_LOC)) {
             Direction toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(goal));
@@ -30,17 +39,39 @@ public class SOLDIER {
                 if (rc.canSenseLocation(goal) && rc.senseRobotAtLocation(goal).team == RobotPlayer.myTeam) {
                     if (myLocation.distanceSquaredTo(goal) >= 9) {
                         rc.move(toMove);
-                        return;
+                        return true;
                     } else {
-                        rc.move(toMove.opposite());
-                        return;
+                        if (Utils.tryMove(toMove.opposite())) return true;
                     }
                 } else {
                     rc.move(toMove);
-                    return;
+                    return true;
                 }
             }
         }
+
+        return false;
+    }
+
+    public static boolean mineAllTheThings() throws GameActionException {
+        Direction dirToRubs = Direction.NONE;
+        double mostRubble = rc.senseRubble(myLocation);
+
+        double rubbleAtLoc;
+        for (Direction d: RobotPlayer.directions) {
+            rubbleAtLoc = rc.senseRubble(myLocation.add(d));
+            if (rubbleAtLoc > mostRubble) {
+                mostRubble = rubbleAtLoc;
+                dirToRubs = d;
+            }
+        }
+
+        if (mostRubble != 0) {
+            rc.clearRubble(dirToRubs);
+            return true;
+        }
+
+        return false;
     }
 
     public static void execute() {

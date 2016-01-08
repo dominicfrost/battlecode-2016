@@ -18,13 +18,28 @@ public class ARCHON {
 
 
         if (flee()) return;
+//        System.out.print("a BCR");
+//        System.out.println(Clock.getBytecodesLeft());
         if (activate()) return;
+//        System.out.print("b BCR");
+//        System.out.println(Clock.getBytecodesLeft());
         if (spawn()) return;
+//        System.out.print("c BCR");
+//        System.out.println(Clock.getBytecodesLeft());
         if (repair()) return;
+//        System.out.print("d BCR");
+//        System.out.println(Clock.getBytecodesLeft());
         if (waitForDenDestruction()) return;
+//        System.out.print("e BCR");
+//        System.out.println(Clock.getBytecodesLeft());
         if (moveToParts()) return;
+//        System.out.print("f BCR");
+//        System.out.println(Clock.getBytecodesLeft());
         if (moveToGroup()) return;
+//        System.out.print("g BCR");
+//        System.out.println(Clock.getBytecodesLeft());
         if (randomMove()) return;
+        System.out.println("NO MOVE MADE!");
     }
 
     public static boolean flee() throws GameActionException {
@@ -113,8 +128,14 @@ public class ARCHON {
     public static boolean moveToParts() throws GameActionException {
         MapLocation[] sightRange = Utils.getSensableLocations(myLocation);
         for (MapLocation m: sightRange) {
+            if (m == null) {
+                return false;
+            }
             if (rc.senseParts(m) != 0) {
-                if (Utils.moveThrough(myLocation, m)) return true;
+                if (Utils.moveThrough(myLocation, m)) {
+                    System.out.println("moveToParts");
+                    return true;
+                }
             }
         }
 
@@ -138,10 +159,14 @@ public class ARCHON {
             return false;
         }
 
-        Direction d = Bug.startBuggin(signal.getLocation(), myLocation, 15);
-        if (d != Direction.NONE || d != Direction.OMNI) {
+        if (myLocation.distanceSquaredTo(signal.getLocation()) < 7) {
+            return false;
+        }
+
+        Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(signal.getLocation()));
+        if (d != Direction.NONE) {
             rc.move(d);
-            System.out.println("buggin!");
+            System.out.println("moveToGroup!");
             return true;
         }
 
@@ -149,6 +174,13 @@ public class ARCHON {
     }
 
     public static boolean randomMove() throws GameActionException {
+        Signal signal = signals[0]; // everyone goes to the first archons location
+
+        // don't move if already at goal
+        if (signal != null && myLocation.distanceSquaredTo(signal.getLocation()) < 7) {
+            return false;
+        }
+
         Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt())%RobotPlayer.directions.length]);
         if (d != Direction.NONE) {
             rc.move(d);

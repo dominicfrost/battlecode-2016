@@ -2,7 +2,6 @@ package team291;
 
 import battlecode.common.*;
 
-import java.util.ArrayDeque;
 
 public class Utils {
 
@@ -213,24 +212,23 @@ public class Utils {
 
     public static MapLocation[] getSensableLocations(MapLocation myLocation) {
         RobotController rc = RobotPlayer.rc;
-        ArrayDeque<MapLocation> q = new ArrayDeque<>();
-        ArrayDeque<MapLocation> toReturn = new ArrayDeque<>();
-        q.add(myLocation);
-        MapLocation curr;
-        MapLocation next;
 
-        while (!q.isEmpty()) {
-            curr = q.pop();
-            for (Direction d: RobotPlayer.directions) {
-                next = curr.add(d);
-                if (rc.canSenseLocation(next)) {
-                    q.add(next);
-                    toReturn.add(next);
+        int longest = (int) Math.sqrt(RobotPlayer.rt.sensorRadiusSquared);
+        MapLocation[] toReturn = new MapLocation[longest * longest];
+        int nextIndex = 0;
+        MapLocation nextLoc;
+
+        for (int i = 0; i < longest; i++) {
+            for (int j = 0; j < longest; j++) {
+                nextLoc = new MapLocation(myLocation.x + i, myLocation.y + j);
+                if (rc.canSenseLocation(nextLoc)) {
+                    toReturn[nextIndex] = nextLoc;
+                    nextIndex++;
                 }
             }
         }
 
-        return (MapLocation[]) toReturn.toArray();
+        return toReturn;
     }
 
     public static boolean moveThrough(MapLocation myLocation, MapLocation goal) throws GameActionException {

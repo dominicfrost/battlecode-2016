@@ -170,15 +170,16 @@ public class Bug {
 
     public static void calcMLine() throws GameActionException {
         Direction dirToGoal;
-        ArrayList<MapLocation> mLine = new ArrayList<MapLocation>();// change to array??
+        ArrayList<MapLocation> mLine = new ArrayList<>();// change to array??
         MapLocation currentLocation = myLocation;
         while (!currentLocation.equals(goal)) {
-            if (Clock.getBytecodesLeft() < 400) {
-                Clock.yield();
-            }
             mLine.add(currentLocation);
             dirToGoal = currentLocation.directionTo(goal);
             currentLocation = currentLocation.add(dirToGoal);
+            System.out.print("CL ");
+            System.out.println(currentLocation);
+            System.out.print("G ");
+            System.out.println(goal);
         }
         mLine.add(goal);
 
