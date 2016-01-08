@@ -2,6 +2,8 @@ package team291;
 
 import battlecode.common.*;
 
+import java.util.ArrayDeque;
+
 
 public class Utils {
 
@@ -15,18 +17,29 @@ public class Utils {
         return false;
     }
 
-    public static Signal[] getArchonSignals() {
-        RobotController rc = RobotPlayer.rc;
-        Signal[] signals = rc.emptySignalQueue();
-
-        Signal[] toReturn = new Signal[6];
+    public static ArrayDeque<Signal> getScoutSignals(Signal[] signals) {
+        ArrayDeque<Signal> scoutSignals = new ArrayDeque<Signal>();
 
         // arraylists are bad, since i know max archons mine as well use that
-        int i = 0;
         for (Signal signal: signals) {
-            if (signal.getTeam() == RobotPlayer.myTeam) {
-                toReturn[i] = signal;
-                i++;
+            if (signal.getTeam() == RobotPlayer.myTeam && signal.getMessage() != null) {
+                scoutSignals.add(signal);
+            }
+        }
+
+        return scoutSignals;
+    }
+
+    public static Signal getDistressSignal(Signal[] signals, MapLocation myLocation) {
+        Signal toReturn = null;
+        double closest = 999999;
+        double distTo;
+        // arraylists are bad, since i know max archons mine as well use that
+        for (Signal signal: signals) {
+            distTo = signal.getLocation().distanceSquaredTo(myLocation);
+            if (signal.getTeam() == RobotPlayer.myTeam && distTo < closest) {
+                toReturn = signal;
+                closest = distTo;
             }
         }
 

@@ -40,7 +40,7 @@ public class RobotPlayer {
 
         switch (rt) {
             case SCOUT:
-                SCOUT.execute(rc);
+                SCOUT.execute();
                 break;
             case VIPER:
                 VIPER.execute(rc);
