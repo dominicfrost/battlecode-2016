@@ -56,7 +56,7 @@ public class Utils {
     public static MapLocation readRallyLocation(MapLocation myLocation, Signal[] signals) {
         int minDist = Integer.MAX_VALUE;
         int dist;
-        MapLocation toReturn = new MapLocation(0,0);
+        MapLocation toReturn = null;
         MapLocation loc;
         for (Signal signal: signals) {
             if (signal == null) {
