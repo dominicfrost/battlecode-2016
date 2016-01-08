@@ -7,7 +7,7 @@ public class ARCHON {
     public static MapLocation myLocation;
     public static Signal[] signals;
     public static RobotController rc;
-
+    public static int separation = 20;
     public static int SOLDIER_SPAWN_COUNT = 0;
     public static int TURRET_SPAWN_COUNT = 0;
 
@@ -25,7 +25,7 @@ public class ARCHON {
         if (moveToParts()) return;
         if (moveToGroup()) return;
         if (randomMove()) return;
-        //System.out.println("NO MOVE MADE!");
+        System.out.println("NO MOVE MADE!");
     }
 
     public static boolean flee() throws GameActionException {
@@ -33,14 +33,14 @@ public class ARCHON {
             Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
-                //System.out.println("flee");
+                System.out.println("flee");
                 return true;
             }
 
             toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
-                //System.out.println("flee");
+                System.out.println("flee");
                 return true;
             }
         }
@@ -61,7 +61,7 @@ public class ARCHON {
 
         if (lowestHealthLocation != null) {
             rc.repair(lowestHealthLocation);
-            //System.out.println("repair");
+            System.out.println("repair");
             return true;
         }
 
@@ -77,7 +77,7 @@ public class ARCHON {
 //            if (rc.hasBuildRequirements(RobotType.SOLDIER)) {
 //                if (spawnInDirection(RobotType.TURRET)) {
 //                    TURRET_SPAWN_COUNT++;
-//                    //System.out.println("spawn turret");
+//                    System.out.println("spawn turret");
 //                    return true;
 //                }
 //            }
@@ -88,7 +88,7 @@ public class ARCHON {
 //        if (rc.hasBuildRequirements(RobotType.SOLDIER)) {
 //            if (spawnInDirection(RobotType.SOLDIER)) {
 //                SOLDIER_SPAWN_COUNT++;
-//                //System.out.println("spawn soldier");
+//                System.out.println("spawn soldier");
 //                return true;
 //            }
 //        }
@@ -101,13 +101,13 @@ public class ARCHON {
             if (r.team == Team.NEUTRAL) {
                 if (r.location.distanceSquaredTo(myLocation) < 2) {
                     rc.activate(r.location);
-                    //System.out.println("activate");
+                    System.out.println("activate");
                     return true;
                 }
                 Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(r.location));
                 if (d != Direction.NONE) {
                     rc.move(d);
-                    //System.out.println("activate");
+                    System.out.println("activate");
                     return true;
                 }
             }
@@ -123,7 +123,7 @@ public class ARCHON {
             }
             if (rc.senseParts(m) != 0) {
                 if (Utils.moveThrough(myLocation, m)) {
-                    //System.out.println("moveToParts");
+                    System.out.println("moveToParts");
                     return true;
                 }
             }
@@ -135,7 +135,7 @@ public class ARCHON {
     public static boolean waitForDenDestruction() throws GameActionException {
         for (RobotInfo r: nearbyRobots) {
             if (r.type == RobotType.ZOMBIEDEN) {
-                //System.out.println("waitForDenDestruction");
+                System.out.println("waitForDenDestruction");
                 return true;
             }
         }
@@ -149,14 +149,14 @@ public class ARCHON {
             return false;
         }
 
-        if (myLocation.distanceSquaredTo(signal.getLocation()) < 15) {
+        if (myLocation.distanceSquaredTo(signal.getLocation()) < separation) {
             return false;
         }
 
         Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(signal.getLocation()));
         if (d != Direction.NONE) {
             rc.move(d);
-            //System.out.println("moveToGroup!");
+            System.out.println("moveToGroup!");
             return true;
         }
 
@@ -164,17 +164,10 @@ public class ARCHON {
     }
 
     public static boolean randomMove() throws GameActionException {
-        Signal signal = signals[0]; // everyone goes to the first archons location
-
-        // don't move if already at goal
-        if (signal != null && myLocation.distanceSquaredTo(signal.getLocation()) < 7) {
-            return false;
-        }
-
         Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt())%RobotPlayer.directions.length]);
         if (d != Direction.NONE) {
             rc.move(d);
-            //System.out.println("randomMove");
+            System.out.println("randomMove");
             return true;
         }
 
