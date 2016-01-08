@@ -18,28 +18,14 @@ public class ARCHON {
 
 
         if (flee()) return;
-//        System.out.print("a BCR");
-//        System.out.println(Clock.getBytecodesLeft());
         if (activate()) return;
-//        System.out.print("b BCR");
-//        System.out.println(Clock.getBytecodesLeft());
         if (spawn()) return;
-//        System.out.print("c BCR");
-//        System.out.println(Clock.getBytecodesLeft());
         if (repair()) return;
-//        System.out.print("d BCR");
-//        System.out.println(Clock.getBytecodesLeft());
         if (waitForDenDestruction()) return;
-//        System.out.print("e BCR");
-//        System.out.println(Clock.getBytecodesLeft());
         if (moveToParts()) return;
-//        System.out.print("f BCR");
-//        System.out.println(Clock.getBytecodesLeft());
         if (moveToGroup()) return;
-//        System.out.print("g BCR");
-//        System.out.println(Clock.getBytecodesLeft());
         if (randomMove()) return;
-        System.out.println("NO MOVE MADE!");
+        //System.out.println("NO MOVE MADE!");
     }
 
     public static boolean flee() throws GameActionException {
@@ -47,14 +33,14 @@ public class ARCHON {
             Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
-                System.out.println("flee");
+                //System.out.println("flee");
                 return true;
             }
 
             toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
-                System.out.println("flee");
+                //System.out.println("flee");
                 return true;
             }
         }
@@ -75,7 +61,7 @@ public class ARCHON {
 
         if (lowestHealthLocation != null) {
             rc.repair(lowestHealthLocation);
-            System.out.println("repair");
+            //System.out.println("repair");
             return true;
         }
 
@@ -83,25 +69,29 @@ public class ARCHON {
     }
 
     public static boolean spawn() throws GameActionException {
-        if (SOLDIER_SPAWN_COUNT > 10 && TURRET_SPAWN_COUNT < 4) {
-            if (rc.hasBuildRequirements(RobotType.SOLDIER)) {
-                if (spawnInDirection(RobotType.TURRET)) {
-                    TURRET_SPAWN_COUNT++;
-                    System.out.println("spawn turret");
-                    return true;
-                }
-            }
-            return false;
+        if (rc.hasBuildRequirements(RobotType.TURRET)) {
+            return spawnTurret();
         }
 
-
-        if (rc.hasBuildRequirements(RobotType.SOLDIER)) {
-            if (spawnInDirection(RobotType.SOLDIER)) {
-                SOLDIER_SPAWN_COUNT++;
-                System.out.println("spawn soldier");
-                return true;
-            }
-        }
+//        if (SOLDIER_SPAWN_COUNT > 10 && TURRET_SPAWN_COUNT < 4) {
+//            if (rc.hasBuildRequirements(RobotType.SOLDIER)) {
+//                if (spawnInDirection(RobotType.TURRET)) {
+//                    TURRET_SPAWN_COUNT++;
+//                    //System.out.println("spawn turret");
+//                    return true;
+//                }
+//            }
+//            return false;
+//        }
+//
+//
+//        if (rc.hasBuildRequirements(RobotType.SOLDIER)) {
+//            if (spawnInDirection(RobotType.SOLDIER)) {
+//                SOLDIER_SPAWN_COUNT++;
+//                //System.out.println("spawn soldier");
+//                return true;
+//            }
+//        }
 
         return false;
     }
@@ -111,13 +101,13 @@ public class ARCHON {
             if (r.team == Team.NEUTRAL) {
                 if (r.location.distanceSquaredTo(myLocation) < 2) {
                     rc.activate(r.location);
-                    System.out.println("activate");
+                    //System.out.println("activate");
                     return true;
                 }
                 Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(r.location));
                 if (d != Direction.NONE) {
                     rc.move(d);
-                    System.out.println("activate");
+                    //System.out.println("activate");
                     return true;
                 }
             }
@@ -133,7 +123,7 @@ public class ARCHON {
             }
             if (rc.senseParts(m) != 0) {
                 if (Utils.moveThrough(myLocation, m)) {
-                    System.out.println("moveToParts");
+                    //System.out.println("moveToParts");
                     return true;
                 }
             }
@@ -145,7 +135,7 @@ public class ARCHON {
     public static boolean waitForDenDestruction() throws GameActionException {
         for (RobotInfo r: nearbyRobots) {
             if (r.type == RobotType.ZOMBIEDEN) {
-                System.out.println("waitForDenDestruction");
+                //System.out.println("waitForDenDestruction");
                 return true;
             }
         }
@@ -166,7 +156,7 @@ public class ARCHON {
         Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(signal.getLocation()));
         if (d != Direction.NONE) {
             rc.move(d);
-            System.out.println("moveToGroup!");
+            //System.out.println("moveToGroup!");
             return true;
         }
 
@@ -184,7 +174,7 @@ public class ARCHON {
         Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt())%RobotPlayer.directions.length]);
         if (d != Direction.NONE) {
             rc.move(d);
-            System.out.println("randomMove");
+            //System.out.println("randomMove");
             return true;
         }
 
@@ -228,6 +218,21 @@ public class ARCHON {
                 return true;
             }
         }
+
+        return false;
+    }
+
+    public static boolean spawnTurret() throws GameActionException {
+        MapLocation potentialSpawnPoint;
+        for (Direction d: RobotPlayer.directions) {
+            potentialSpawnPoint = myLocation.add(d);
+            if (((potentialSpawnPoint.x + potentialSpawnPoint.y) % 2) == 0 && rc.canBuild(d, RobotType.TURRET)) {
+                rc.build(d, RobotType.TURRET);
+                return true;
+            }
+        }
+
+        if (randomMove()) return true;
 
         return false;
     }
