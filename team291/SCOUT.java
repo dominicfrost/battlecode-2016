@@ -1,8 +1,8 @@
-package davesbot;
+package team291;
 
 import battlecode.common.*;
 
-public class VIPER {
+public class SCOUT {
 
     public static void doTurn(RobotController rc) throws GameActionException {
 

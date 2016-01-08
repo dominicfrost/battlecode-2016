@@ -1,10 +1,11 @@
-package davesbot;
+package team291;
 
 import battlecode.common.*;
 
 public class ARCHON {
     public static RobotInfo[] nearbyRobots;
     public static MapLocation myLocation;
+    public static Signal[] signals;
     public static RobotController rc;
 
     public static int SOLDIER_SPAWN_COUNT = 0;
@@ -13,6 +14,7 @@ public class ARCHON {
     public static void doTurn() throws GameActionException {
         nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
+        signals = Utils.getArchonSignals();
 
         // flee if necessary
         if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
@@ -24,7 +26,7 @@ public class ARCHON {
 
             toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH);
             if (toMove != Direction.NONE) {
-                rc.move(Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH));
+                rc.move(toMove);
                 return;
             }
 
@@ -35,6 +37,8 @@ public class ARCHON {
         if (activate()) return;
         if (spawn()) return;
         if (repair()) return;
+        if (waitForDenDestruction()) return;
+        if (moveToGroup()) return;
         if (randomMove()) return;
     }
 
@@ -96,6 +100,31 @@ public class ARCHON {
         return false;
     }
 
+    public static boolean waitForDenDestruction() throws GameActionException {
+        for (RobotInfo r: nearbyRobots) {
+            if (r.type == RobotType.ZOMBIEDEN) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean moveToGroup() throws GameActionException {
+        Signal signal = signals[0]; // everyone goes to the first archons location
+        if (signal == null) {
+            return false;
+        }
+
+        Direction d = Bug.startBuggin(signal.getLocation(), myLocation, 15);
+        if (d != Direction.NONE || d != Direction.OMNI) {
+            rc.move(d);
+            return true;
+        }
+
+        return false;
+    }
+
     public static boolean randomMove() throws GameActionException {
         Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt())%RobotPlayer.directions.length]);
         if (d != Direction.NONE) {
@@ -125,6 +154,14 @@ public class ARCHON {
             rc.broadcastMessageSignal(closestLoc.x, closestLoc.y, RobotPlayer.maxSignalRange);
             return;
         }
+
+        for (RobotInfo r: nearbyRobots) {
+            if (r.type == RobotType.ZOMBIEDEN) {
+                rc.broadcastMessageSignal(r.location.x, r.location.y, RobotPlayer.maxSignalRange);
+                return;
+            }
+        }
+
         rc.broadcastMessageSignal(myLocation.x, myLocation.y, RobotPlayer.maxSignalRange);
     }
 
@@ -146,6 +183,8 @@ public class ARCHON {
 
                 if (rc.isCoreReady()) {
                     doTurn();
+                } else {
+                    rc.emptySignalQueue();
                 }
 
                 updateRallyLocation();

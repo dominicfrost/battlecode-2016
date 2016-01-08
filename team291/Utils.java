@@ -1,9 +1,6 @@
-package davesbot;
+package team291;
 
 import battlecode.common.*;
-import examplefuncsplayer.*;
-
-import java.awt.*;
 
 public class Utils {
 

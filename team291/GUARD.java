@@ -1,8 +1,8 @@
-package davesbot;
+package team291;
 
 import battlecode.common.*;
 
-public class TTM {
+public class GUARD {
 
     public static void doTurn(RobotController rc) throws GameActionException {
 
@@ -11,9 +11,7 @@ public class TTM {
     public static void execute(RobotController rc) {
         while (true) {
             try {
-                if (rc.isCoreReady()) {
-                    doTurn(rc);
-                }
+                doTurn(rc);
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
