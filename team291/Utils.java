@@ -2,6 +2,8 @@ package team291;
 
 import battlecode.common.*;
 
+import java.util.ArrayDeque;
+
 public class Utils {
 
     public static boolean attack(MapLocation loc) throws GameActionException {
@@ -191,7 +193,58 @@ public class Utils {
         return dirToMinDamage;
     }
 
-    public static int directionToInt(Direction d)  throws GameActionException {
+    // This method will attempt to move in Direction d (or as close to it as possible)
+    public static boolean tryMove(Direction d) throws GameActionException {
+        RobotController rc = RobotPlayer.rc;
+
+        int offsetIndex = 0;
+        int[] offsets = {0,1,-1,2,-2};
+        int dirint = directionToInt(d);
+        while (offsetIndex < 5 && (!rc.canMove(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8]))) {
+            offsetIndex++;
+        }
+        if (offsetIndex < 5) {
+            rc.move(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8]);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static MapLocation[] getSensableLocations(MapLocation myLocation) {
+        RobotController rc = RobotPlayer.rc;
+        ArrayDeque<MapLocation> q = new ArrayDeque<>();
+        ArrayDeque<MapLocation> toReturn = new ArrayDeque<>();
+        q.add(myLocation);
+        MapLocation curr;
+        MapLocation next;
+
+        while (!q.isEmpty()) {
+            curr = q.pop();
+            for (Direction d: RobotPlayer.directions) {
+                next = curr.add(d);
+                if (rc.canSenseLocation(next)) {
+                    q.add(next);
+                    toReturn.add(next);
+                }
+            }
+        }
+
+        return (MapLocation[]) toReturn.toArray();
+    }
+
+    public static boolean moveThrough(MapLocation myLocation, MapLocation goal) throws GameActionException {
+        RobotController rc = RobotPlayer.rc;
+        Direction toNext = myLocation.directionTo(goal);
+        if (rc.senseRubble(myLocation.add(toNext)) > 50) {
+            rc.clearRubble(toNext);
+            return true;
+        } else {
+            return tryMove(toNext);
+        }
+    }
+
+    public static int directionToInt(Direction d) throws GameActionException {
         switch(d) {
             case NORTH:
                 return 0;

@@ -23,12 +23,22 @@ public class SOLDIER {
         }
 
         MapLocation goal = Utils.readRallyLocation(myLocation, signals);
-        boolean tooClose = myLocation.distanceSquaredTo(goal) >= 9;
-        if (!goal.equals(EMPTY_MAP_LOC) && myLocation.distanceSquaredTo(goal) >= 9) {
+        if (!goal.equals(EMPTY_MAP_LOC)) {
             Direction toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(goal));
             if (toMove != Direction.NONE) {
-                rc.move(toMove);
-                return;
+                // if i can sense the robot and its my archon move away if too close, else move to goal
+                if (rc.canSenseLocation(goal) && rc.senseRobotAtLocation(goal).team == RobotPlayer.myTeam) {
+                    if (myLocation.distanceSquaredTo(goal) >= 9) {
+                        rc.move(toMove);
+                        return;
+                    } else {
+                        rc.move(toMove.opposite());
+                        return;
+                    }
+                } else {
+                    rc.move(toMove);
+                    return;
+                }
             }
         }
     }

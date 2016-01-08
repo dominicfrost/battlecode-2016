@@ -16,30 +16,35 @@ public class ARCHON {
         myLocation = rc.getLocation();
         signals = Utils.getArchonSignals();
 
-        // flee if necessary
+
+        if (flee()) return;
+        if (activate()) return;
+        if (spawn()) return;
+        if (repair()) return;
+        if (waitForDenDestruction()) return;
+        if (moveToParts()) return;
+        if (moveToGroup()) return;
+        if (randomMove()) return;
+    }
+
+    public static boolean flee() throws GameActionException {
         if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
             Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
-                return;
+                System.out.println("flee");
+                return true;
             }
 
             toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
-                return;
+                System.out.println("flee");
+                return true;
             }
-
-            // we are screwed! may as well try and spawn
         }
 
-        // spawn or repair if possible
-        if (activate()) return;
-        if (spawn()) return;
-        if (repair()) return;
-        if (waitForDenDestruction()) return;
-        if (moveToGroup()) return;
-        if (randomMove()) return;
+        return false;
     }
 
     public static boolean repair() throws GameActionException {
@@ -55,6 +60,7 @@ public class ARCHON {
 
         if (lowestHealthLocation != null) {
             rc.repair(lowestHealthLocation);
+            System.out.println("repair");
             return true;
         }
 
@@ -66,6 +72,7 @@ public class ARCHON {
             if (rc.hasBuildRequirements(RobotType.SOLDIER)) {
                 if (spawnInDirection(RobotType.TURRET)) {
                     TURRET_SPAWN_COUNT++;
+                    System.out.println("spawn turret");
                     return true;
                 }
             }
@@ -76,6 +83,7 @@ public class ARCHON {
         if (rc.hasBuildRequirements(RobotType.SOLDIER)) {
             if (spawnInDirection(RobotType.SOLDIER)) {
                 SOLDIER_SPAWN_COUNT++;
+                System.out.println("spawn soldier");
                 return true;
             }
         }
@@ -88,11 +96,13 @@ public class ARCHON {
             if (r.team == Team.NEUTRAL) {
                 if (r.location.distanceSquaredTo(myLocation) < 2) {
                     rc.activate(r.location);
+                    System.out.println("activate");
                     return true;
                 }
                 Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(r.location));
                 if (d != Direction.NONE) {
                     rc.move(d);
+                    System.out.println("activate");
                     return true;
                 }
             }
@@ -100,9 +110,21 @@ public class ARCHON {
         return false;
     }
 
+    public static boolean moveToParts() throws GameActionException {
+        MapLocation[] sightRange = Utils.getSensableLocations(myLocation);
+        for (MapLocation m: sightRange) {
+            if (rc.senseParts(m) != 0) {
+                if (Utils.moveThrough(myLocation, m)) return true;
+            }
+        }
+
+        return false;
+    }
+
     public static boolean waitForDenDestruction() throws GameActionException {
         for (RobotInfo r: nearbyRobots) {
             if (r.type == RobotType.ZOMBIEDEN) {
+                System.out.println("waitForDenDestruction");
                 return true;
             }
         }
@@ -119,6 +141,7 @@ public class ARCHON {
         Direction d = Bug.startBuggin(signal.getLocation(), myLocation, 15);
         if (d != Direction.NONE || d != Direction.OMNI) {
             rc.move(d);
+            System.out.println("buggin!");
             return true;
         }
 
@@ -129,6 +152,7 @@ public class ARCHON {
         Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt())%RobotPlayer.directions.length]);
         if (d != Direction.NONE) {
             rc.move(d);
+            System.out.println("randomMove");
             return true;
         }
 
