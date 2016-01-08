@@ -2,12 +2,14 @@ package team291;
 
 import battlecode.common.*;
 
+import java.awt.*;
+
 public class ARCHON {
     public static RobotInfo[] nearbyRobots;
     public static MapLocation myLocation;
     public static Signal[] signals;
     public static RobotController rc;
-    public static int separation = 20;
+    public static int separation = 15;
     public static int SOLDIER_SPAWN_COUNT = 0;
     public static int TURRET_SPAWN_COUNT = 0;
 
@@ -37,7 +39,8 @@ public class ARCHON {
                 return true;
             }
 
-            toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH);
+            Direction dirToAllies = getDirectionToAllies();
+            toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, dirToAllies);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
                 System.out.println("flee");
@@ -228,6 +231,22 @@ public class ARCHON {
         if (randomMove()) return true;
 
         return false;
+    }
+
+    public static Direction getDirectionToAllies() throws GameActionException {
+        int x = 0;
+        int y = 0;
+        int count = 0;
+        for (RobotInfo r: nearbyRobots) {
+            if (r.team == RobotPlayer.myTeam && r.type == RobotType.TURRET) { //MAKE SURE TO CHANGE THIS IF WE ABANDON TURRET STRAT
+                x += r.location.x;
+                y += r.location.y;
+                count++;
+            }
+        }
+
+        MapLocation avg = new MapLocation(x/count, y/count);
+        return myLocation.directionTo(avg);
     }
 
     public static void execute() {
