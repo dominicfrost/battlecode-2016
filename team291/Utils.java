@@ -151,7 +151,6 @@ public class Utils {
         int offsetIndex = 0;
         int[] offsets = {0,1,-1,2,-2,3,-3,4};
         int dirint = directionToInt(d);
-
         while (offsetIndex < 8) {
             d = RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8];
             offsetIndex++;

@@ -14,10 +14,15 @@ public class TURRET {
         signals = Utils.getArchonSignals();
 
         if (Utils.attackGoalIfPossible(signals)) return;
+        if (attackAnythingClose()) return;
+    }
 
+    public static boolean attackAnythingClose() throws GameActionException {
         for (RobotInfo r: nearbyRobots) {
-            if (r.team != RobotPlayer.myTeam && r.team != Team.NEUTRAL && Utils.attack(r.location)) return;
+            if (r.team != RobotPlayer.myTeam && r.team != Team.NEUTRAL && Utils.attack(r.location)) return true;
         }
+
+        return false;
     }
 
     public static void execute() {
