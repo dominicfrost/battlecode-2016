@@ -21,7 +21,7 @@ public class ARCHON {
         if (activate()) return;
         if (spawn()) return;
         if (repair()) return;
-        if (waitForDenDestruction()) return;
+//        if (waitForDenDestruction()) return; // Only needed with soldier strat
         if (moveToParts()) return;
         if (moveToGroup()) return;
         if (randomMove()) return;
@@ -149,7 +149,7 @@ public class ARCHON {
             return false;
         }
 
-        if (myLocation.distanceSquaredTo(signal.getLocation()) < 7) {
+        if (myLocation.distanceSquaredTo(signal.getLocation()) < 15) {
             return false;
         }
 
