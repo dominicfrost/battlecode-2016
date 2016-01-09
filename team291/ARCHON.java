@@ -11,13 +11,76 @@ public class ARCHON {
     public static ArrayDeque<Signal> signals;
     public static RobotController rc;
     public static int separation = 15;
-    public static int SOLDIER_SPAWN_COUNT = 0;
-    public static int TURRET_SPAWN_COUNT = 0;
+
+    private static int archonCount;
+    private static ArchonState state = ArchonState.NONE;
+    private static MapLocation rallyPoint;
+
+    public static enum ArchonState {
+        NONE,
+        REPORTING_ARCHON_COUNT,
+        STAYING_NEAR_INITIAL_LOCATION,
+        MOVING_TO_RALLY,
+        CHILLIN_AT_RALLY,
+        REPORTING_TO_AOI,
+        RETURING_TO_RALLY,
+        HIDING_FROM_THE_ZOMBIE_SPAWN_LIKE_A_BITCH
+    }
 
     public static void doTurn() throws GameActionException {
         nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
+
+        switch (state) {
+            case NONE:
+                spawnInitialScout();
+                break;
+            case REPORTING_ARCHON_COUNT:
+                reportArchonCount();
+                break;
+            case STAYING_NEAR_INITIAL_LOCATION:
+                if (flee()) return;
+                if (activate()) return;
+                if (moveToParts()) return; // may have to remove this if they stray too far from home
+
+                moveTowardRally();
+                break;
+            case MOVING_TO_RALLY:
+                if (flee()) return;
+                if (activate()) return;
+                if (moveToParts()) return;
+
+                moveTowardRally();
+                break;
+            case CHILLIN_AT_RALLY:
+                if (flee()) return;
+                if (repair()) return;
+                if (spawn()) return;
+                if (activate()) return;
+                
+                break;
+            case REPORTING_TO_AOI:
+                if (flee()) return;
+                if (activate()) return;
+                if (repair()) return;
+
+                reportAOI();
+                break;
+            case RETURING_TO_RALLY:
+                if (flee()) return;
+                if (activate()) return;
+                if (repair()) return;
+
+                moveTowardRally();
+                break;
+            case HIDING_FROM_THE_ZOMBIE_SPAWN_LIKE_A_BITCH:
+                if (flee()) return;
+                if (repair()) return;
+
+                moveTowardRally();
+                break;
+        }
 
         if (flee()) return;
         if (activate()) return;

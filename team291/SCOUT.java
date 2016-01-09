@@ -27,7 +27,7 @@ public class SCOUT {
         SEARCHING_FOR_ALLYS,
         REPORTING_RALLY_LOCATION,
         SEARCHING_FOR_AOI,
-        GATHERING_SUPPORT
+        REPORTING_AOI
     }
 
 
@@ -49,7 +49,7 @@ public class SCOUT {
             case SEARCHING_FOR_AOI:
                 searchForAOIs();
                 break;
-            case GATHERING_SUPPORT:
+            case REPORTING_AOI:
                 reportAOI();
                 break;
         }
@@ -101,7 +101,6 @@ public class SCOUT {
             int id = momsId;
             rallyPoint = home;
             int[] idMsg;
-            int[] locationMsg;
             Signal[] scoutSigArr = (Signal[]) scoutSignals.toArray(); // cast to array because arraydeques suck
 
             // lower id wins to be our rally point for now...
@@ -109,8 +108,7 @@ public class SCOUT {
                 idMsg = scoutSigArr[i].getMessage();
                 if (idMsg[0] == lookingForAllyScoutOrdinal && idMsg[1] < id) {
                     id = idMsg[1];
-                    locationMsg = scoutSigArr[i-1].getMessage();
-                    rallyPoint = deserializeMapLocation(locationMsg[1]);
+                    rallyPoint = deserializeMapLocation(scoutSigArr[i-1].getMessage()[1]);
                 }
                 i--; // there will be an idmsg and location msg coupled so subtract 1 again
             }
@@ -146,7 +144,7 @@ public class SCOUT {
             if (rc.senseParts(m) > 0) {
                 broadcastLandMark = Utils.MessageType.PART_LOCATION;
                 goal = m;
-                state = ScoutState.GATHERING_SUPPORT;
+                state = ScoutState.REPORTING_AOI;
                 reportAOI();
                 return;
             }
@@ -156,7 +154,7 @@ public class SCOUT {
             if (r.team == Team.NEUTRAL) {
                 broadcastLandMark = Utils.MessageType.NEUTRAL_ROBOT_LOCATION;
                 goal = r.location;
-                state = ScoutState.GATHERING_SUPPORT;
+                state = ScoutState.REPORTING_AOI;
                 reportAOI();
                 return;
             }
