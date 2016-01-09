@@ -57,6 +57,9 @@ public class RobotPlayer {
             case TTM:
                 TTM.execute(rc);
                 break;
+            case GUARD:
+                GUARD.execute();
+                break;
         }
     }
 }
