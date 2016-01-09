@@ -15,7 +15,7 @@ public class Utils {
 
         // archon msgs
         ARCHON_COUNT,
-        AOI_CONFIRMED// shouldn't need this
+        AOI_CONFIRMED
     }
 
     public static boolean attack(MapLocation loc) throws GameActionException {

@@ -62,7 +62,7 @@ public class ARCHON {
                 if (isCoreReady) {
                     if (flee()) return;
                     if (activate()) return;
-                    if (moveToParts()) return;
+//                    if (moveToParts()) return;
                 }
 
                 returnToRally();

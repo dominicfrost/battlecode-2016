@@ -35,6 +35,8 @@ public class SCOUT {
         REPORTING_AOI
     }
 
+    private static int maxAOIDistance = 200;
+
 
     private static void doTurn() throws GameActionException {
         isCoreReady = rc.isCoreReady();
@@ -157,7 +159,8 @@ public class SCOUT {
             if (m == null) {
                 break;
             }
-            if (rc.senseParts(m) > 0) {
+            // TODO: decide if we should only do this if there is little rubble
+            if (rc.senseParts(m) > 0 && rc.senseRubble(m) < 50) {
                 broadcastLandMark = Utils.MessageType.PART_LOCATION;
                 goal = m;
                 state = ScoutState.REPORTING_AOI;
@@ -177,7 +180,7 @@ public class SCOUT {
         }
 
         // if i hit a wally change my random dir
-        if (!rc.onTheMap(myLocation.add(myRandomDir))) {
+        if (myLocation.distanceSquaredTo(rallyPoint) > maxAOIDistance || !rc.onTheMap(myLocation.add(myRandomDir))) {
             myRandomDir = RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) %8];
         }
 
