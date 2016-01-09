@@ -229,7 +229,8 @@ public class ARCHON {
                 rallyPoint = Utils.deserializeMapLocation(msg[1]);
                 System.out.println("GOT MY GOAL " + rallyPoint);
                 state = ArchonState.MOVING_TO_RALLY;
-                if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+                rc.broadcastMessageSignal(Utils.MessageType.RALLY_POINT_CONFIRMED.ordinal(), 0, RobotPlayer.maxSignalRange);
+                if (rc.isCoreReady()) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
                 return;
             }
         }

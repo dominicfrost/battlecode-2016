@@ -110,7 +110,6 @@ public class SCOUT {
         rc.broadcastMessageSignal(lookingForAllyScoutOrdinal, Utils.serializeMapLocation(home), RobotPlayer.maxSignalRange);
 
         if (scoutSignals.size() >= archonCount - 1 && scoutsCanSeeEachother()) { // should be == in theory but there may be a case where it takes along time for one to join the group
-            System.out.println("HEY");
             int[] idMsg;
             int robotId = RobotPlayer.id;
             rallyPoint = home;
