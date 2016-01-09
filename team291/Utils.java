@@ -7,6 +7,7 @@ import java.util.ArrayDeque;
 public class Utils {
     public static enum MessageType {
         // scout msgs
+        ARCHON_COUNT_CONFIRMED,
         LOOKING_FOR_ALLY_SCOUT,
         RALLY_LOCATION_REPORT,
         NEUTRAL_ROBOT_LOCATION,
@@ -31,7 +32,6 @@ public class Utils {
     public static ArrayDeque<Signal> getScoutSignals(Signal[] signals) {
         ArrayDeque<Signal> scoutSignals = new ArrayDeque<>();
 
-        // arraylists are bad, since i know max archons mine as well use that
         for (Signal signal: signals) {
             if (signal.getTeam() == RobotPlayer.myTeam && signal.getMessage() != null) {
                 scoutSignals.add(signal);
@@ -163,6 +163,17 @@ public class Utils {
         return false;
     }
 
+    // wrapper for dirToLeastDamage that trys to make the move returns true if made the move
+    public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyRobots, MapLocation myLocation, Direction d) throws GameActionException {
+        RobotController rc = RobotPlayer.rc;
+        d = Utils.dirToLeastDamage(nearbyRobots, myLocation, d);
+        if (d != Direction.NONE) {
+            rc.move(d);
+            return true;
+        }
+
+        return false;
+    }
 
     public static Direction dirToLeastDamage(RobotInfo[] enemyRobots, MapLocation myLocation, Direction d) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
@@ -264,6 +275,23 @@ public class Utils {
         } else {
             return tryMove(toNext);
         }
+    }
+
+
+    public static int getLeft(int field) {
+        return field >> 16; // sign bit is significant
+    }
+
+    public static int getRight(int field) {
+        return (short) (field & 0xFFFF); //gets cast back to signed int
+    }
+
+    public static int serializeMapLocation(MapLocation m) {
+        return (m.x << 16) | (m.y & 0xFFFF);
+    }
+
+    public static MapLocation deserializeMapLocation(int i) {
+        return new MapLocation(getLeft(i), getRight(i));
     }
 
     public static int directionToInt(Direction d) throws GameActionException {

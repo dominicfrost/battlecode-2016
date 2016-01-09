@@ -14,6 +14,7 @@ public class SCOUT {
     public static ArrayDeque<Signal> scoutSignals;
     public static int archonCount;
     public static int momsId; // id of archon who spawned me
+    private static boolean isCoreReady;
 
     // scout state
     public static ScoutState state = ScoutState.NONE;
@@ -21,9 +22,11 @@ public class SCOUT {
     public static MapLocation home; // where i came from
     public static MapLocation goal; // location of aoi i found
     public static Utils.MessageType broadcastLandMark;
+    public static Direction myRandomDir = Direction.NORTH;
 
     public static enum ScoutState {
         NONE,
+        READY_TO_START,
         SEARCHING_FOR_ALLYS,
         REPORTING_RALLY_LOCATION,
         SEARCHING_FOR_AOI,
@@ -32,6 +35,7 @@ public class SCOUT {
 
 
     private static void doTurn() throws GameActionException {
+        isCoreReady = rc.isCoreReady();
         nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
         signals = rc.emptySignalQueue();
@@ -39,6 +43,9 @@ public class SCOUT {
 
         switch (state) {
             case NONE:
+                state = ScoutState.READY_TO_START;
+                break;
+            case READY_TO_START:
                 determineInitialState();
                 break;
             case SEARCHING_FOR_ALLYS:
@@ -46,6 +53,7 @@ public class SCOUT {
                 break;
             case REPORTING_RALLY_LOCATION:
                 reportRallyLocation();
+                break;
             case SEARCHING_FOR_AOI:
                 searchForAOIs();
                 break;
@@ -65,6 +73,7 @@ public class SCOUT {
         double closest = 999999;
         double dist;
         int[] msg;
+        int senderId = -1;
 
         // get the archon count if it exists. it only will for initial scouts built
         for (Signal s: scoutSignals) {
@@ -74,15 +83,17 @@ public class SCOUT {
             if (msg[0] == Utils.MessageType.ARCHON_COUNT.ordinal() && dist < closest) {
                 closest = dist;
                 closestSignal = s;
+                senderId = s.getRobotID();
             }
         }
 
         if (closestSignal != null) {
             // there was an archon count message was found, hence i'm one of our initial scouts
             archonCount = closestSignal.getMessage()[1];
-            momsId = closestSignal.getID();
+            momsId = closestSignal.getRobotID();
             state = ScoutState.SEARCHING_FOR_ALLYS;
-            Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH_EAST);
+            rc.broadcastMessageSignal(Utils.MessageType.ARCHON_COUNT_CONFIRMED.ordinal(), senderId, RobotPlayer.maxSignalRange);
+            if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH_EAST);
             return;
         }
 
@@ -94,32 +105,35 @@ public class SCOUT {
     // if i finds all of the initial scouts
     private static void searchForAllyScouts() throws GameActionException {
         int lookingForAllyScoutOrdinal = Utils.MessageType.LOOKING_FOR_ALLY_SCOUT.ordinal();
-        rc.broadcastMessageSignal(lookingForAllyScoutOrdinal, serializeMapLocation(home), RobotPlayer.maxSignalRange);
-        rc.broadcastMessageSignal(lookingForAllyScoutOrdinal, momsId, RobotPlayer.maxSignalRange);
+        rc.broadcastMessageSignal(lookingForAllyScoutOrdinal, Utils.serializeMapLocation(home), RobotPlayer.maxSignalRange);
 
-        if (scoutSignals.size() >= archonCount * 2) { // should be == in theory but there may be a case where it takes along time for one to join the group
-            int id = momsId;
-            rallyPoint = home;
+        if (scoutSignals.size() >= archonCount && scoutsCanSeeEachother()) { // should be == in theory but there may be a case where it takes along time for one to join the group
             int[] idMsg;
-            Signal[] scoutSigArr = (Signal[]) scoutSignals.toArray(); // cast to array because arraydeques suck
+            int robotId = RobotPlayer.id;
+            rallyPoint = home;
 
-            // lower id wins to be our rally point for now...
-            for (int i = scoutSigArr.length - 1; i > -1; i--) {
-                idMsg = scoutSigArr[i].getMessage();
-                if (idMsg[0] == lookingForAllyScoutOrdinal && idMsg[1] < id) {
-                    id = idMsg[1];
-                    rallyPoint = deserializeMapLocation(scoutSigArr[i-1].getMessage()[1]);
+            for (Signal s: scoutSignals) {
+                idMsg = s.getMessage();
+                if (idMsg[0] == lookingForAllyScoutOrdinal && idMsg[1] < robotId) {
+                    rallyPoint = Utils.deserializeMapLocation(idMsg[1]);
+                    robotId = s.getRobotID();
                 }
-                i--; // there will be an idmsg and location msg coupled so subtract 1 again
             }
 
-
-            Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
             state = ScoutState.REPORTING_RALLY_LOCATION;
             return;
         }
 
-        Utils.dirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH_EAST);
+        // if i see any other scouts follow them
+//        for (RobotInfo r: nearbyRobots) {
+//            if (myLocation.distanceSquaredTo(r.location) > 40) {
+//                if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(r.location));
+//                return;
+//            }
+//        }
+
+        Clock.yield();
+        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH_EAST);
     }
 
     private static void reportRallyLocation() throws GameActionException {
@@ -133,14 +147,19 @@ public class SCOUT {
                 return;
             }
         }
-        rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION_REPORT.ordinal(), serializeMapLocation(rallyPoint), RobotPlayer.maxSignalRange);
-        Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(home));
+
+        rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION_REPORT.ordinal(), Utils.serializeMapLocation(rallyPoint), RobotPlayer.maxSignalRange);
+        Clock.yield();
+        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(home));
     }
 
 
     private static void searchForAOIs() throws GameActionException {
         MapLocation[] sensableLocations = Utils.getSensableLocations(myLocation);
         for (MapLocation m: sensableLocations) {
+            if (m == null) {
+                break;
+            }
             if (rc.senseParts(m) > 0) {
                 broadcastLandMark = Utils.MessageType.PART_LOCATION;
                 goal = m;
@@ -159,6 +178,13 @@ public class SCOUT {
                 return;
             }
         }
+
+        // if i hit a wally change my random dir
+        if (!rc.onTheMap(myLocation.add(myRandomDir))) {
+            myRandomDir = RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) %8];
+        }
+
+        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myRandomDir);
     }
 
     public static void reportAOI() throws GameActionException {
@@ -172,21 +198,30 @@ public class SCOUT {
             }
         }
 
-        rc.broadcastMessageSignal(broadcastLandMark.ordinal(), serializeMapLocation(goal), RobotPlayer.maxSignalRange);
+        rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
         Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(home));
+    }
+
+    public static boolean scoutsCanSeeEachother() throws GameActionException {
+        for (Signal s: scoutSignals) {
+            for (Signal t: scoutSignals) { // can be optimized
+                if (s.getLocation().distanceSquaredTo(t.getLocation()) > RobotPlayer.rt.sensorRadiusSquared) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public static void execute() {
         rc = RobotPlayer.rc;
         while (true) {
             try {
-                if (rc.isCoreReady()) {
-                    doTurn();
-                }
+                doTurn();
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
-                e.printStackTrace();
+//                e.printStackTrace();
             }
         }
     }

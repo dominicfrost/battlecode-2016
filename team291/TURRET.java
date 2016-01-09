@@ -11,9 +11,9 @@ public class TURRET {
     public static void doTurn() throws GameActionException {
         nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
-        signals = Utils.getArchonSignals();
-
-        if (Utils.attackGoalIfPossible(signals)) return;
+//        signals = Utils.getArchonSignals();
+//
+//        if (Utils.attackGoalIfPossible(signals)) return;
         if (attackAnythingClose()) return;
     }
 
