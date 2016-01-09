@@ -4,8 +4,19 @@ import battlecode.common.*;
 
 import java.util.ArrayDeque;
 
-
 public class Utils {
+    public static enum MessageType {
+        // scout msgs
+        LOOKING_FOR_ALLY_SCOUT,
+        RALLY_LOCATION_REPORT,
+        NEUTRAL_ROBOT_LOCATION,
+        PART_LOCATION,
+
+        // archon msgs
+        ARCHON_COUNT,
+        RALLY_POINT_CONFIRMED,
+        AOI_CONFIRMED
+    }
 
     public static boolean attack(MapLocation loc) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
@@ -18,7 +29,7 @@ public class Utils {
     }
 
     public static ArrayDeque<Signal> getScoutSignals(Signal[] signals) {
-        ArrayDeque<Signal> scoutSignals = new ArrayDeque<Signal>();
+        ArrayDeque<Signal> scoutSignals = new ArrayDeque<>();
 
         // arraylists are bad, since i know max archons mine as well use that
         for (Signal signal: signals) {
@@ -30,6 +41,7 @@ public class Utils {
         return scoutSignals;
     }
 
+    // gets the closest distress signal
     public static Signal getDistressSignal(Signal[] signals, MapLocation myLocation) {
         Signal toReturn = null;
         double closest = 999999;
