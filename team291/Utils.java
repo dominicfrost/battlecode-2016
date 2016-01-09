@@ -15,8 +15,7 @@ public class Utils {
 
         // archon msgs
         ARCHON_COUNT,
-        RALLY_POINT_CONFIRMED,
-        AOI_CONFIRMED
+        AOI_CONFIRMED// shouldn't need this
     }
 
     public static boolean attack(MapLocation loc) throws GameActionException {

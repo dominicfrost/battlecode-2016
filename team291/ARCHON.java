@@ -227,9 +227,8 @@ public class ARCHON {
             msg = s.getMessage();
             if (msg[0] == Utils.MessageType.RALLY_LOCATION_REPORT.ordinal()) {
                 rallyPoint = Utils.deserializeMapLocation(msg[1]);
-                System.out.println("GOT MY GOAL " + rallyPoint);
+                System.out.println("GOT MY GOAL " + rallyPoint + " from " + s.getRobotID());
                 state = ArchonState.MOVING_TO_RALLY;
-                rc.broadcastMessageSignal(Utils.MessageType.RALLY_POINT_CONFIRMED.ordinal(), 0, RobotPlayer.maxSignalRange);
                 if (rc.isCoreReady()) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
                 return;
             }

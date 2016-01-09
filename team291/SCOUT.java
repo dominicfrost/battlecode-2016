@@ -138,18 +138,15 @@ public class SCOUT {
     }
 
     private static void reportRallyLocation() throws GameActionException {
-        for (Signal s: scoutSignals) {
-            // if its a rally point confirmed msg from mom
-            if (s.getID() == momsId && s.getMessage()[0] == Utils.MessageType.RALLY_POINT_CONFIRMED.ordinal()) {
-                // mom got the rally location, go search for new stuff! new home is rally point
+
+        for (RobotInfo r: nearbyRobots) {
+            if (r.ID == momsId) {
+                rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION_REPORT.ordinal(), Utils.serializeMapLocation(rallyPoint), RobotPlayer.maxSignalRange);
                 state = ScoutState.SEARCHING_FOR_AOI;
-                home = rallyPoint;
-                searchForAOIs();
                 return;
             }
         }
 
-        rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION_REPORT.ordinal(), Utils.serializeMapLocation(rallyPoint), RobotPlayer.maxSignalRange);
         if (rc.isCoreReady()) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(home));
     }
 
@@ -188,18 +185,15 @@ public class SCOUT {
     }
 
     public static void reportAOI() throws GameActionException {
-        for (Signal s: scoutSignals) {
-            if (s.getMessage()[0] == Utils.MessageType.AOI_CONFIRMED.ordinal()) {
-
-                // reported! go find another
+        for (RobotInfo r: nearbyRobots) {
+            if (r.team != RobotPlayer.myTeam && r.type == RobotType.ARCHON) {
+                rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION_REPORT.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
                 state = ScoutState.SEARCHING_FOR_AOI;
-                searchForAOIs();
                 return;
             }
         }
 
-        rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
-        Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(home));
+        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
     }
 
     public static boolean scoutsCanSeeEachother() throws GameActionException {
