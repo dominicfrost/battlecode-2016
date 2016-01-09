@@ -227,12 +227,14 @@ public class ARCHON {
             msg = s.getMessage();
             if (msg[0] == Utils.MessageType.RALLY_LOCATION_REPORT.ordinal()) {
                 rallyPoint = Utils.deserializeMapLocation(msg[1]);
+                System.out.println("GOT MY GOAL " + rallyPoint);
                 state = ArchonState.MOVING_TO_RALLY;
                 if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
                 return;
             }
         }
 
+        if (myLocation == rallyPoint) return;
         if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
     }
 

@@ -1,7 +1,9 @@
 package team291;
 
 import battlecode.common.*;
+import battlecode.common.Clock;
 
+import java.time.*;
 import java.util.ArrayDeque;
 
 
@@ -107,14 +109,15 @@ public class SCOUT {
         int lookingForAllyScoutOrdinal = Utils.MessageType.LOOKING_FOR_ALLY_SCOUT.ordinal();
         rc.broadcastMessageSignal(lookingForAllyScoutOrdinal, Utils.serializeMapLocation(home), RobotPlayer.maxSignalRange);
 
-        if (scoutSignals.size() >= archonCount && scoutsCanSeeEachother()) { // should be == in theory but there may be a case where it takes along time for one to join the group
+        if (scoutSignals.size() >= archonCount - 1 && scoutsCanSeeEachother()) { // should be == in theory but there may be a case where it takes along time for one to join the group
+            System.out.println("HEY");
             int[] idMsg;
             int robotId = RobotPlayer.id;
             rallyPoint = home;
 
             for (Signal s: scoutSignals) {
                 idMsg = s.getMessage();
-                if (idMsg[0] == lookingForAllyScoutOrdinal && idMsg[1] < robotId) {
+                if (idMsg[0] == lookingForAllyScoutOrdinal && s.getRobotID() < robotId) {
                     rallyPoint = Utils.deserializeMapLocation(idMsg[1]);
                     robotId = s.getRobotID();
                 }
@@ -132,8 +135,7 @@ public class SCOUT {
 //            }
 //        }
 
-        Clock.yield();
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH_EAST);
+        if (rc.isCoreReady()) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH_EAST);
     }
 
     private static void reportRallyLocation() throws GameActionException {
@@ -149,8 +151,7 @@ public class SCOUT {
         }
 
         rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION_REPORT.ordinal(), Utils.serializeMapLocation(rallyPoint), RobotPlayer.maxSignalRange);
-        Clock.yield();
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(home));
+        if (rc.isCoreReady()) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(home));
     }
 
 
@@ -221,7 +222,7 @@ public class SCOUT {
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
-//                e.printStackTrace();
+                e.printStackTrace();
             }
         }
     }
