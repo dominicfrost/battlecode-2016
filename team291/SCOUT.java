@@ -187,7 +187,7 @@ public class SCOUT {
     public static void reportAOI() throws GameActionException {
         for (RobotInfo r: nearbyRobots) {
             if (r.team != RobotPlayer.myTeam && r.type == RobotType.ARCHON) {
-                rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION_REPORT.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
+                rc.broadcastMessageSignal(Utils.MessageType.AOI_CONFIRMED.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
                 state = ScoutState.SEARCHING_FOR_AOI;
                 return;
             }
