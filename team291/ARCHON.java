@@ -83,7 +83,7 @@ public class ARCHON {
                     if (flee()) return;
                     if (activate()) return;
                     if (repair()) return;
-                    if (moveToParts()) return;
+//                    if (moveToParts()) return;
                 }
 
                 reportToAOI();
@@ -245,7 +245,13 @@ public class ARCHON {
             return;
         }
 
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+//        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+        if (isCoreReady) {
+            Direction d = Bug.startBuggin(rallyPoint, myLocation, 0);
+            if (d != Direction.NONE && d != Direction.OMNI) {
+                rc.move(d);
+            }
+        }
     }
 
     public static void chill() throws GameActionException {

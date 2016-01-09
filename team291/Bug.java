@@ -19,12 +19,13 @@ public class Bug {
         ON_MLINE,
         ON_WALL,
         AT_GOAL
-    };//if sense den and have good army don't bug
+    }
 
     private static BugState state = BugState.NO_MLINE;
 
-    public static Direction startBuggin(MapLocation goal_in, MapLocation myLocation, int quitThresh) throws GameActionException {
+    public static Direction startBuggin(MapLocation goal_in, MapLocation myLocation_in, int quitThresh) throws GameActionException {
         rc = RobotPlayer.rc;
+        myLocation = myLocation_in;
 
         //if i changed goals or am not where i left off last start over
         if ((goal == null || lastLocation == null) || !goal.equals(goal_in) || !lastLocation.equals(myLocation)) {
@@ -176,13 +177,8 @@ public class Bug {
             mLine.add(currentLocation);
             dirToGoal = currentLocation.directionTo(goal);
             currentLocation = currentLocation.add(dirToGoal);
-            System.out.print("CL ");
-            System.out.println(currentLocation);
-            System.out.print("G ");
-            System.out.println(goal);
         }
         mLine.add(goal);
-
         currentMLine = mLine;
     }
 
