@@ -263,13 +263,23 @@ public class Utils {
         RobotController rc = RobotPlayer.rc;
 
         int longest = (int) Math.sqrt(RobotPlayer.rt.sensorRadiusSquared);
-        MapLocation[] toReturn = new MapLocation[longest * longest];
+        MapLocation[] toReturn = new MapLocation[longest * longest * 2];
         int nextIndex = 0;
         MapLocation nextLoc;
 
-        for (int i = 0; i < longest; i++) {
-            for (int j = 0; j < longest; j++) {
+        for (int i = longest - 1; i > -1; i--) {
+            for (int j = longest - 1; j > -1; j--) {
                 nextLoc = new MapLocation(myLocation.x + i, myLocation.y + j);
+                if (rc.canSenseLocation(nextLoc)) {
+                    toReturn[nextIndex] = nextLoc;
+                    nextIndex++;
+                }
+            }
+        }
+
+        for (int i = longest - 1; i > 0; i--) {
+            for (int j = longest - 1; j > 0; j--) {
+                nextLoc = new MapLocation(myLocation.x - i, myLocation.y - j);
                 if (rc.canSenseLocation(nextLoc)) {
                     toReturn[nextIndex] = nextLoc;
                     nextIndex++;
