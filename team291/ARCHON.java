@@ -259,14 +259,16 @@ public class ARCHON {
     }
 
     public static void chill() throws GameActionException {
-        int[] msg;
-        for (Signal s: signals) {
-            msg = s.getMessage();
-            if (msg[0] == Utils.MessageType.AOI_CONFIRMED.ordinal()) {
-                aoi = Utils.deserializeMapLocation(msg[1]);
-                state = ArchonState.REPORTING_TO_AOI;
+        if (!rc.hasBuildRequirements(RobotType.TURRET)) {
+            int[] msg;
+            for (Signal s : signals) {
+                msg = s.getMessage();
+                if (msg[0] == Utils.MessageType.AOI_CONFIRMED.ordinal()) {
+                    aoi = Utils.deserializeMapLocation(msg[1]);
+                    state = ArchonState.REPORTING_TO_AOI;
 //                reportToAOI();
-                return;
+                    return;
+                }
             }
         }
     }

@@ -3,8 +3,6 @@ package team291;
 import battlecode.common.*;
 import battlecode.common.Clock;
 
-import java.awt.*;
-import java.time.*;
 import java.util.ArrayDeque;
 
 
