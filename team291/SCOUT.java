@@ -58,19 +58,19 @@ public class SCOUT {
                 searchForAllyScouts();
                 break;
             case REPORTING_RALLY_LOCATION:
-                if (flee()) return;
+                if (isCoreReady && flee()) return;
                 reportRallyLocation();
                 break;
             case SEARCHING_FOR_AOI:
-                if (flee()) return;
+                if (isCoreReady && flee()) return;
                 searchForAOIs();
                 break;
             case RESETTING_SEARCH_DIRECTION:
-                if (flee()) return;
+                if (isCoreReady && flee()) return;
                 resetSearchDir();
                 break;
             case REPORTING_AOI:
-                if (flee()) return;
+                if (isCoreReady && flee()) return;
                 reportAOI();
                 break;
         }
