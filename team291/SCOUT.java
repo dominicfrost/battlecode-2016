@@ -58,18 +58,31 @@ public class SCOUT {
                 searchForAllyScouts();
                 break;
             case REPORTING_RALLY_LOCATION:
+                if (flee()) return;
                 reportRallyLocation();
                 break;
             case SEARCHING_FOR_AOI:
+                if (flee()) return;
                 searchForAOIs();
                 break;
             case RESETTING_SEARCH_DIRECTION:
+                if (flee()) return;
                 resetSearchDir();
                 break;
             case REPORTING_AOI:
+                if (flee()) return;
                 reportAOI();
                 break;
         }
+    }
+
+    private static boolean flee() throws GameActionException {
+        if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
+            Direction dirToAllies = myLocation.directionTo(rallyPoint);
+            if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, dirToAllies)) return true;
+        }
+
+        return false;
     }
 
     // sets state to either:

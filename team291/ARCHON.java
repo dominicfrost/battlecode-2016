@@ -121,12 +121,7 @@ public class ARCHON {
             }
 
             Direction dirToAllies = myLocation.directionTo(rallyPoint);
-            toMove = Utils.dirToLeastDamage(nearbyRobots, myLocation, dirToAllies);
-            if (toMove != Direction.NONE) {
-                rc.move(toMove);
-                //System.out.println("flee");
-                return true;
-            }
+            if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, dirToAllies)) return true;
         }
 
         return false;
@@ -216,7 +211,7 @@ public class ARCHON {
         // TODO: decide if we want to delete this so we don't get stuck in this state when many archons spawn close
         for (Signal s: signals) {
             msg = s.getMessage();
-            if (msg[0] == Utils.MessageType.ARCHON_COUNT_CONFIRMED.ordinal() && msg[1] == RobotPlayer.id) {
+            if (msg[0] == Utils.MessageType.ARCHON_COUNT_CONFIRMED.ordinal() ) {//&& msg[1] == RobotPlayer.id) {
                 state = ArchonState.STAYING_NEAR_INITIAL_LOCATION;
                 return;
             }
