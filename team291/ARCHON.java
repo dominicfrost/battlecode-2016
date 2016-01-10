@@ -111,8 +111,11 @@ public class ARCHON {
     public static boolean flee() throws GameActionException {
         if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
             Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
+            if (RobotPlayer.id == 1691) System.out.println(toMove);
+
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
+
                 //System.out.println("flee");
                 return true;
             }

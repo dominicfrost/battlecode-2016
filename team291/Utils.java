@@ -153,7 +153,7 @@ public class Utils {
     public static boolean shouldFlee(RobotController rc, RobotInfo[] enemyRobots, MapLocation loc) throws GameActionException {
         double distanceAfterMovingTowards;
         for (RobotInfo robot: enemyRobots) {
-            if (robot.team == RobotPlayer.myTeam) {
+            if (robot.team == RobotPlayer.myTeam || robot.type == RobotType.ARCHON) {
                 continue;
             }
 
@@ -176,8 +176,6 @@ public class Utils {
     public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyRobots, MapLocation myLocation, Direction d) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
         d = Utils.dirToLeastDamage(nearbyRobots, myLocation, d);
-        if (RobotPlayer.id == 3236) System.out.println("resetSearchDir " + d);
-
         if (d != Direction.NONE) {
             rc.move(d);
             return true;

@@ -158,18 +158,14 @@ public class SCOUT {
 
 
     private static void searchForAOIs() throws GameActionException {
-        if (RobotPlayer.id == 64) System.out.println("searchForAOIs");
         MapLocation[] sensableLocations = Utils.getSensableLocations(myLocation);
-        if (RobotPlayer.id == 64) System.out.println("kyhg "+ sensableLocations.length);
         for (MapLocation m: sensableLocations) {
             if (m == null) {
                 break;
             }
-            if (RobotPlayer.id == 64&& rc.getRoundNum() < 320) System.out.println("lol " + m);
 
             // TODO: decide if we should only do this if there is little rubble
             if (rc.senseParts(m) > 0 && rc.senseRubble(m) < 50) {
-                if (RobotPlayer.id == 64) System.out.println("foundish");
                 broadcastLandMark = Utils.MessageType.PART_LOCATION;
                 goal = m;
                 state = ScoutState.REPORTING_AOI;
