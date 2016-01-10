@@ -121,7 +121,11 @@ public class Utils {
                         continue;
                     }
 
-                    distanceAfterMovingTowards = desiredLoc.distanceSquaredTo(robot.location.add(robot.location.directionTo(desiredLoc)));
+                    if (robot.type == RobotType.TURRET) {
+                        distanceAfterMovingTowards = desiredLoc.distanceSquaredTo(robot.location);
+                    } else {
+                        distanceAfterMovingTowards = desiredLoc.distanceSquaredTo(robot.location.add(robot.location.directionTo(desiredLoc)));
+                    }
 
                     //could he hit me if he moved in
                     if (distanceAfterMovingTowards <= robot.type.attackRadiusSquared) {
@@ -147,12 +151,18 @@ public class Utils {
      * broadcast - should i broadcast the enemies location as a temporary goal
      */
     public static boolean shouldFlee(RobotController rc, RobotInfo[] enemyRobots, MapLocation loc) throws GameActionException {
+        double distanceAfterMovingTowards;
         for (RobotInfo robot: enemyRobots) {
             if (robot.team == RobotPlayer.myTeam) {
                 continue;
             }
 
-            double distanceAfterMovingTowards = loc.distanceSquaredTo(robot.location.add(robot.location.directionTo(loc)));
+            if (robot.type == RobotType.TURRET) {
+                distanceAfterMovingTowards = loc.distanceSquaredTo(robot.location);
+            } else {
+                distanceAfterMovingTowards = loc.distanceSquaredTo(robot.location.add(robot.location.directionTo(loc)));
+            }
+
             int attackRad = robot.type.attackRadiusSquared;
 
             // if he moved towards me could he hit me???
@@ -166,6 +176,8 @@ public class Utils {
     public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyRobots, MapLocation myLocation, Direction d) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
         d = Utils.dirToLeastDamage(nearbyRobots, myLocation, d);
+        if (RobotPlayer.id == 3236) System.out.println("resetSearchDir " + d);
+
         if (d != Direction.NONE) {
             rc.move(d);
             return true;
@@ -201,11 +213,14 @@ public class Utils {
                         continue;
                     }
 
-                    distanceAfterMovingTowards = desiredLoc.distanceSquaredTo(robot.location.add(robot.location.directionTo(desiredLoc)));
+                    if (robot.type == RobotType.TURRET) {
+                        distanceAfterMovingTowards = desiredLoc.distanceSquaredTo(robot.location);
+                    } else {
+                        distanceAfterMovingTowards = desiredLoc.distanceSquaredTo(robot.location.add(robot.location.directionTo(desiredLoc)));
+                    }
 
                     //could he hit me if he moved in
                     if (distanceAfterMovingTowards <= robot.type.attackRadiusSquared) {
-
                         // could he out chase me if i fled to where he cant hit me now?
                         damageOnLoc += robot.type.attackPower;
                     }

@@ -18,6 +18,7 @@ public class ARCHON {
     private static ArchonState state = ArchonState.NONE;
     private static MapLocation rallyPoint;
     private static MapLocation aoi;
+//    private static boolean INITIAL_TURRET_SPAWNED = false;
 
     public static enum ArchonState {
         NONE,
@@ -64,7 +65,6 @@ public class ARCHON {
                     if (activate()) return;
 //                    if (moveToParts()) return;
                 }
-
                 returnToRally();
                 break;
             case CHILLIN_AT_RALLY:
@@ -182,9 +182,10 @@ public class ARCHON {
             if (m == null) {
                 return false;
             }
-            if (rc.senseParts(m) != 0) {
-                if (Utils.moveThrough(myLocation, m)) {
-                    //System.out.println("moveToParts");
+            if (isCoreReady && rc.senseParts(m) != 0 && rc.senseRubble(m) < 50) {
+                Direction d = Bug.startBuggin(rallyPoint, myLocation, 0);
+                if (d != Direction.NONE && d != Direction.OMNI) {
+                    rc.move(d);
                     return true;
                 }
             }
@@ -234,6 +235,11 @@ public class ARCHON {
             }
         }
 
+        //TODO : spawn soldier here??
+//        if (isCoreReady && !INITIAL_TURRET_SPAWNED && spawnTurret()) {
+//            INITIAL_TURRET_SPAWNED = true;
+//            return;
+//        }
         if (myLocation == rallyPoint) return;
         if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
     }
@@ -261,20 +267,33 @@ public class ARCHON {
             if (msg[0] == Utils.MessageType.AOI_CONFIRMED.ordinal()) {
                 aoi = Utils.deserializeMapLocation(msg[1]);
                 state = ArchonState.REPORTING_TO_AOI;
-                reportToAOI();
+//                reportToAOI();
                 return;
             }
         }
     }
 
     public static void reportToAOI() throws GameActionException {
-        if (myLocation.distanceSquaredTo(aoi) < 2) {
+        // if im at the goal go back
+        if (myLocation.equals(aoi)) {
             state = ArchonState.RETURING_TO_RALLY;
             returnToRally();
             return;
         }
 
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(aoi));
+        // if there is a bot at the location and im next to it go back
+        if (rc.canSenseLocation(aoi) && rc.senseRobotAtLocation(aoi) != null && myLocation.distanceSquaredTo(aoi) < 2) {
+            state = ArchonState.RETURING_TO_RALLY;
+            returnToRally();
+            return;
+        }
+
+        if (isCoreReady) {
+            Direction d = Bug.startBuggin(aoi, myLocation, 0);
+            if (d != Direction.NONE && d != Direction.OMNI) {
+                rc.move(d);
+            }
+        }
     }
 
 

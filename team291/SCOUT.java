@@ -3,6 +3,7 @@ package team291;
 import battlecode.common.*;
 import battlecode.common.Clock;
 
+import java.awt.*;
 import java.time.*;
 import java.util.ArrayDeque;
 
@@ -32,6 +33,7 @@ public class SCOUT {
         SEARCHING_FOR_ALLYS,
         REPORTING_RALLY_LOCATION,
         SEARCHING_FOR_AOI,
+        RESETTING_SEARCH_DIRECTION,
         REPORTING_AOI
     }
 
@@ -60,6 +62,9 @@ public class SCOUT {
                 break;
             case SEARCHING_FOR_AOI:
                 searchForAOIs();
+                break;
+            case RESETTING_SEARCH_DIRECTION:
+                resetSearchDir();
                 break;
             case REPORTING_AOI:
                 reportAOI();
@@ -133,7 +138,6 @@ public class SCOUT {
 //            if (myLocation.distanceSquaredTo(r.location) > 40) {
 //                if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(r.location));
 //                return;
-//            }
 //        }
 
         if (rc.isCoreReady()) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, Direction.NORTH_EAST);
@@ -154,6 +158,7 @@ public class SCOUT {
 
 
     private static void searchForAOIs() throws GameActionException {
+        if (RobotPlayer.id == 3236) System.out.println("searchForAOIs");
         MapLocation[] sensableLocations = Utils.getSensableLocations(myLocation);
         for (MapLocation m: sensableLocations) {
             if (m == null) {
@@ -181,21 +186,37 @@ public class SCOUT {
 
         // if i hit a wally change my random dir
         if (myLocation.distanceSquaredTo(rallyPoint) > maxAOIDistance || !rc.onTheMap(myLocation.add(myRandomDir))) {
-            myRandomDir = RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) %8];
+            state = ScoutState.RESETTING_SEARCH_DIRECTION;
+            if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+            return;
         }
 
         if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myRandomDir);
     }
 
+    public static void resetSearchDir() throws GameActionException {
+        if (myLocation.distanceSquaredTo(rallyPoint) < 15) {
+            myRandomDir = RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) % 8];
+            state = ScoutState.SEARCHING_FOR_AOI;
+            return;
+        }
+
+        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+    }
+
     public static void reportAOI() throws GameActionException {
+        if (isCoreReady && myLocation.equals(goal)) {
+            Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+            return;
+        }
+
         for (RobotInfo r: nearbyRobots) {
-            if (r.team != RobotPlayer.myTeam && r.type == RobotType.ARCHON) {
+            if (r.team == RobotPlayer.myTeam && r.type == RobotType.ARCHON) {
                 rc.broadcastMessageSignal(Utils.MessageType.AOI_CONFIRMED.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
                 state = ScoutState.SEARCHING_FOR_AOI;
                 return;
             }
         }
-
         if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
     }
 

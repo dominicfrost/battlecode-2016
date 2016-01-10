@@ -55,10 +55,7 @@ public class Bug {
 
         lastLocation = myLocation.add(dirToMove);
 
-        if(lastLocation.distanceSquaredTo(goal) <= quitThresh) {
-            state = BugState.AT_GOAL;
-            return Direction.OMNI;
-        } else if (currentMLine.contains(lastLocation)) {
+        if (currentMLine.contains(lastLocation)) {
             state = BugState.ON_MLINE;
         }
 
@@ -94,7 +91,7 @@ public class Bug {
         int myLocationIndex = currentMLine.indexOf(myLocation);
         //get the next location on the mLine and try to move there
         MapLocation nextLocation = currentMLine.get(myLocationIndex + 1);
-        if (rc.isLocationOccupied(nextLocation)) return Direction.NONE;
+//        if (rc.isLocationOccupied(nextLocation)) return Direction.NONE;
 
         Direction nextLocationDir = myLocation.directionTo(nextLocation);
         myDirection = nextLocationDir;
