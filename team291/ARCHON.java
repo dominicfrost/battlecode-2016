@@ -14,17 +14,12 @@ public class ARCHON {
 //    public static int separation = 15;
     private static boolean isCoreReady;
 
-    private static int archonCount = -1;
     private static ArchonState state = ArchonState.NONE;
     private static MapLocation rallyPoint;
     private static MapLocation aoi;
-//    private static boolean INITIAL_TURRET_SPAWNED = false;
 
     public static enum ArchonState {
         NONE,
-        READY_TO_GIVE_ARCHON_COUNT,
-        REPORTING_ARCHON_COUNT,
-        STAYING_NEAR_INITIAL_LOCATION,
         MOVING_TO_RALLY,
         CHILLIN_AT_RALLY,
         REPORTING_TO_AOI,
@@ -40,30 +35,12 @@ public class ARCHON {
 
         switch (state) {
             case NONE:
-                archonCount = rc.getRobotCount();
-                state = ArchonState.READY_TO_GIVE_ARCHON_COUNT;
-                reportArchonCount();
-                break;
-            case READY_TO_GIVE_ARCHON_COUNT:
-                spawnInitialScout();
-                break;
-            case REPORTING_ARCHON_COUNT:
-                reportArchonCount();
-                break;
-            case STAYING_NEAR_INITIAL_LOCATION:
-                if (isCoreReady) {
-                    if (flee()) return;
-                    if (activate()) return;
-                    if (moveToParts()) return; // may have to remove this if they stray too far from home
-                }
-
-                waitForRallyLocation();
+                getRallyLocation();
                 break;
             case MOVING_TO_RALLY:
                 if (isCoreReady) {
                     if (flee()) return;
                     if (activate()) return;
-//                    if (moveToParts()) return;
                 }
                 returnToRally();
                 break;
@@ -75,7 +52,6 @@ public class ARCHON {
                     if (activate()) return;
                     if (moveToParts()) return;
                 }
-
                 chill();
                 break;
             case REPORTING_TO_AOI:
@@ -83,7 +59,6 @@ public class ARCHON {
                     if (flee()) return;
                     if (activate()) return;
                     if (repair()) return;
-//                    if (moveToParts()) return;
                 }
 
                 reportToAOI();
@@ -192,55 +167,44 @@ public class ARCHON {
         return false;
     }
 
-    public static void spawnInitialScout() throws GameActionException {
-        // rally location while waiting for real rally location is my spot where i spawned the scout
+    public static void getRallyLocation() throws GameActionException {
+        Clock.yield();
+        rc.broadcastMessageSignal(0, 0, 10000);
+        Clock.yield();
+
+        signals = Utils.getScoutSignals(rc.emptySignalQueue());
+        int sum;
+        int lowest = 0;
+        int lowestRobotId = RobotPlayer.id;
         rallyPoint = myLocation;
-        if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
-            state = ArchonState.REPORTING_ARCHON_COUNT;
-            reportArchonCount();
-            return;
+
+        for (Signal s: signals) {
+            lowest += myLocation.distanceSquaredTo(s.getLocation()); // lowest is initialy my location to all others
         }
 
-        randomMove();
-    }
-
-    public static void reportArchonCount() throws GameActionException {
-        int[] msg;
-
-        // When we get a response from the scout that it received our message switch state to STAYING_NEAR_INITIAL_LOCATION
-        // TODO: decide if we want to delete this so we don't get stuck in this state when many archons spawn close
-        for (Signal s: signals) {
-            msg = s.getMessage();
-            if (msg[0] == Utils.MessageType.ARCHON_COUNT_CONFIRMED.ordinal() ) {//&& msg[1] == RobotPlayer.id) {
-                state = ArchonState.STAYING_NEAR_INITIAL_LOCATION;
-                return;
+        for (Signal s1: signals) {
+            sum = myLocation.distanceSquaredTo(s1.getLocation()); //start sum at distance to mylocation
+            for (Signal s2: signals) {
+                if (!s2.equals(s1)) {
+                    sum += s1.getLocation().distanceSquaredTo(s2.getLocation()); // add distance to other signal
+                }
+            }
+            if (sum < lowest) {
+                rallyPoint = s1.getLocation();
+                lowest = sum;
+                lowestRobotId = s1.getRobotID();
+            }
+            // lower robot id breaks the tie
+            if (sum == lowest && s1.getRobotID() < lowestRobotId) {
+                rallyPoint = s1.getLocation();
+                lowest = sum;
+                lowestRobotId = s1.getRobotID();
             }
         }
 
-        rc.broadcastMessageSignal(Utils.MessageType.ARCHON_COUNT.ordinal(), archonCount, RobotPlayer.maxSignalRange);
+        state = ArchonState.MOVING_TO_RALLY;
     }
 
-    public static void waitForRallyLocation() throws GameActionException {
-        int[] msg;
-        for (Signal s: signals) {
-            msg = s.getMessage();
-            if (msg[0] == Utils.MessageType.RALLY_LOCATION_REPORT.ordinal()) {
-                rallyPoint = Utils.deserializeMapLocation(msg[1]);
-                System.out.println("GOT MY GOAL " + rallyPoint + " from " + s.getRobotID());
-                state = ArchonState.MOVING_TO_RALLY;
-                if (rc.isCoreReady()) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
-                return;
-            }
-        }
-
-        //TODO : spawn soldier here??
-//        if (isCoreReady && !INITIAL_TURRET_SPAWNED && spawnTurret()) {
-//            INITIAL_TURRET_SPAWNED = true;
-//            return;
-//        }
-        if (myLocation == rallyPoint) return;
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
-    }
 
     public static void returnToRally() throws GameActionException {
         if (myLocation.distanceSquaredTo(rallyPoint) < 9) {
@@ -249,7 +213,6 @@ public class ARCHON {
             return;
         }
 
-//        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
         if (isCoreReady) {
             Direction d = Bug.startBuggin(rallyPoint, myLocation, 0);
             if (d != Direction.NONE && d != Direction.OMNI) {
@@ -263,12 +226,15 @@ public class ARCHON {
             int[] msg;
             for (Signal s : signals) {
                 msg = s.getMessage();
-                if (msg[0] == Utils.MessageType.AOI_CONFIRMED.ordinal()) {
+                if (msg[0] == Utils.MessageType.PART_LOCATION.ordinal() || msg[0] == Utils.MessageType.NEUTRAL_ROBOT_LOCATION.ordinal()) {
                     aoi = Utils.deserializeMapLocation(msg[1]);
                     state = ArchonState.REPORTING_TO_AOI;
-//                reportToAOI();
                     return;
                 }
+            }
+
+            if (isCoreReady && myLocation.distanceSquaredTo(rallyPoint) > 9) {
+                Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
             }
         }
     }
@@ -348,10 +314,7 @@ public class ARCHON {
         rc =  RobotPlayer.rc;
         while (true) {
             try {
-
                 doTurn();
-
-//                updateRallyLocation();
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -361,95 +324,3 @@ public class ARCHON {
         }
     }
 }
-
-//
-//    public static void updateRallyLocation() throws GameActionException {
-//        double closest = 99999;
-//        MapLocation closestLoc = null;
-//        double diff;
-//
-//        for (RobotInfo r: nearbyRobots) {
-//            if (r.team != RobotPlayer.myTeam && r.team != Team.NEUTRAL) {
-//                diff = myLocation.distanceSquaredTo(r.location);
-//                if  (diff < closest) {
-//                    closestLoc = r.location;
-//                    closest = diff;
-//                }
-//            }
-//        }
-//
-//        if (closestLoc != null) {
-//            rc.broadcastMessageSignal(closestLoc.x, closestLoc.y, RobotPlayer.maxSignalRange);
-//            return;
-//        }
-//
-//        for (RobotInfo r: nearbyRobots) {
-//            if (r.type == RobotType.ZOMBIEDEN) {
-//                rc.broadcastMessageSignal(r.location.x, r.location.y, RobotPlayer.maxSignalRange);
-//                return;
-//            }
-//        }
-//
-//        rc.broadcastMessageSignal(myLocation.x, myLocation.y, RobotPlayer.maxSignalRange);
-//    }
-//
-//    public static boolean spawnInDirection(RobotType type) throws GameActionException {
-//        for (Direction d: RobotPlayer.directions) {
-//            if (rc.canBuild(d, type)) {
-//                rc.build(d, type);
-//                return true;
-//            }
-//        }
-//
-//        return false;
-//    }
-
-
-
-//    public static Direction getDirectionToAllies() throws GameActionException {
-//        int x = 0;
-//        int y = 0;
-//        int count = 0;
-//        for (RobotInfo r: nearbyRobots) {
-//            if (r.team == RobotPlayer.myTeam && r.type == RobotType.TURRET) { //MAKE SURE TO CHANGE THIS IF WE ABANDON TURRET STRAT
-//                x += r.location.x;
-//                y += r.location.y;
-//                count++;
-//            }
-//        }
-//
-//        MapLocation avg = new MapLocation(x/count, y/count);
-//        return myLocation.directionTo(avg);
-//    }
-
-//    public static boolean waitForDenDestruction() throws GameActionException {
-//        for (RobotInfo r: nearbyRobots) {
-//            if (r.type == RobotType.ZOMBIEDEN) {
-//                //System.out.println("waitForDenDestruction");
-//                return true;
-//            }
-//        }
-//
-//        return false;
-//    }
-//
-//    public static boolean moveToGroup() throws GameActionException {
-//        Signal signal = signals.pop(); // everyone goes to the first archons location
-//        if (signal == null) {
-//            return false;
-//        }
-//
-//        if (myLocation.distanceSquaredTo(signal.getLocation()) < separation) {
-//            return false;
-//        }
-//
-//        Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(signal.getLocation()));
-//        if (d != Direction.NONE) {
-//            rc.move(d);
-//            //System.out.println("moveToGroup!");
-//            return true;
-//        }
-//
-//        return false;
-//    }
-//

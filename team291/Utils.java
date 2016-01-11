@@ -7,15 +7,9 @@ import java.util.ArrayDeque;
 public class Utils {
     public static enum MessageType {
         // scout msgs
-        ARCHON_COUNT_CONFIRMED,
-        LOOKING_FOR_ALLY_SCOUT,
-        RALLY_LOCATION_REPORT,
         NEUTRAL_ROBOT_LOCATION,
         PART_LOCATION,
-
-        // archon msgs
-        ARCHON_COUNT,
-        AOI_CONFIRMED
+        ENEMY_LOCATION,
     }
 
     public static boolean attack(MapLocation loc) throws GameActionException {
@@ -45,6 +39,7 @@ public class Utils {
         Signal toReturn = null;
         double closest = 999999;
         double distTo;
+
         // arraylists are bad, since i know max archons mine as well use that
         for (Signal signal: signals) {
             distTo = signal.getLocation().distanceSquaredTo(myLocation);
@@ -57,19 +52,13 @@ public class Utils {
         return toReturn;
     }
 
-    public static boolean attackGoalIfPossible(Signal[] signals) throws GameActionException {
-        int[] payload;
+    public static boolean attackGoalIfPossible(ArrayDeque<Signal> signals) throws GameActionException {
+        int[] msg;
         MapLocation sigLoc;
         for (Signal signal: signals) {
-            if (signal == null) {
-                break;
-            }
-            payload = signal.getMessage();
-            sigLoc = new MapLocation(payload[0], payload[1]);
-
-            // if the archon is brodcastin an attack location
-
-            if (!signal.getTeam().equals(RobotPlayer.myTeam) && !sigLoc.equals(signal.getLocation())) {
+            msg = signal.getMessage();
+            if (msg[0] == MessageType.ENEMY_LOCATION.ordinal()) {
+                sigLoc = deserializeMapLocation(msg[1]);
                 if (attack(sigLoc)) return true;
             }
         }
@@ -77,25 +66,6 @@ public class Utils {
         return false;
     }
 
-    public static MapLocation readRallyLocation(MapLocation myLocation, Signal[] signals) {
-        int minDist = Integer.MAX_VALUE;
-        int dist;
-        MapLocation toReturn = null;
-        MapLocation loc;
-        for (Signal signal: signals) {
-            if (signal == null) {
-                return toReturn;
-            }
-            loc = signal.getLocation();
-            dist = myLocation.distanceSquaredTo(loc);
-            if (dist < minDist) {
-                minDist = dist;
-                toReturn = loc;
-            }
-        }
-
-        return toReturn;
-    }
 
 
     /*

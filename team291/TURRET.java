@@ -2,18 +2,19 @@ package team291;
 
 import battlecode.common.*;
 
+import java.util.ArrayDeque;
+
 public class TURRET {
     public static RobotController rc;
     public static RobotInfo[] nearbyRobots;
     public static MapLocation myLocation;
-    public static Signal[] signals;
+    public static ArrayDeque<Signal> signals;
 
     public static void doTurn() throws GameActionException {
         nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
-//        signals = Utils.getArchonSignals();
-//
-//        if (Utils.attackGoalIfPossible(signals)) return;
+        signals = Utils.getScoutSignals(rc.emptySignalQueue());
+        if (Utils.attackGoalIfPossible(signals)) return;
         if (attackAnythingClose()) return;
     }
 
