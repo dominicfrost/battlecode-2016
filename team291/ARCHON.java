@@ -94,7 +94,6 @@ public class ARCHON {
 //            }
 
             MapLocation d = Utils.enemyAvgLoc(nearbyRobots, myLocation);
-            if (RobotPlayer.id == 3609) System.out.println(d);
             Direction dirToAllies = myLocation.directionTo(d);
             if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, dirToAllies.opposite())) return true;
         }
