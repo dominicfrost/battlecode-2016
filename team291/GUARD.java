@@ -37,6 +37,7 @@ public class GUARD {
         if (moveToRallySinceWeak()) return;
         if (attackSinceEnemiesNearby()) return;
         if (advanceSinceEnemiesSensed()) return;
+//        if (clearNearbyRubble()) return;
         // TODO: move towards distress call
         patrolPerimeter();
     }
@@ -82,11 +83,15 @@ public class GUARD {
                     closestEnemy = enemyRobot;
                 }
             }
-            Utils.tryMove(myLocation.directionTo(closestEnemy.location));
-            return true;
+            return Utils.moveThrough(myLocation, myLocation.directionTo(closestEnemy.location));
         }
         return false;
     }
+
+//    public static boolean clearNearbyRubble() throws GameActionException {
+////        if (rc.senseRubble())
+//        return false;
+//    }
 
     public static boolean patrolPerimeter() throws GameActionException {
         return Utils.tryMoveWithinPerimeter(rallyPoint, Utils.getRandomDirection());

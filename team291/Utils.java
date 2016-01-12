@@ -303,14 +303,13 @@ public class Utils {
         return rc.canMove(d) && rallyPoint.distanceSquaredTo(rc.getLocation().add(d)) < distanceSquaredToPerimeter();
     }
 
-    public static boolean moveThrough(MapLocation myLocation, MapLocation goal) throws GameActionException {
+    public static boolean moveThrough(MapLocation myLocation, Direction d) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
-        Direction toNext = myLocation.directionTo(goal);
-        if (rc.senseRubble(myLocation.add(toNext)) > 50) {
-            rc.clearRubble(toNext);
+        if (rc.senseRubble(myLocation.add(d)) > 50) {
+            rc.clearRubble(d);
             return true;
         } else {
-            return tryMove(toNext);
+            return tryMove(d);
         }
     }
 

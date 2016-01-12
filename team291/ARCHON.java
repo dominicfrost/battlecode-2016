@@ -15,6 +15,8 @@ public class ARCHON {
     private static MapLocation rallyPoint;
     private static MapLocation aoi;
 
+    private static int spawnFate = -1;
+
     private static ArrayDeque<MapLocation> seen = new ArrayDeque<>();
 
     public static enum ArchonState {
@@ -134,18 +136,29 @@ public class ARCHON {
 
     public static boolean spawn() throws GameActionException {
         if (rc.hasBuildRequirements(RobotType.TURRET)) {
-            int fate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-
-            if (fate < 50) {
-                return spawnTurret();
+            if (spawnFate < 50) {
+                if (spawnTurret()) {
+                    spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+                    return true;
+                }
+                return false;
             }
 
-            if (fate < 95) {
-                return spawnGuard();
+            if (spawnFate < 95) {
+                if (spawnGuard()) {
+                    spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+                    return true;
+                }
+                return false;
             }
 
-            if (fate < 100) {
-                return trySpawn(Direction.NORTH, RobotType.SCOUT);
+            if (spawnFate < 100) {
+                if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
+                    spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+                    return true;
+                }
+                return false;
+
             }
         }
 
@@ -350,6 +363,7 @@ public class ARCHON {
 
     public static void execute() {
         rc =  RobotPlayer.rc;
+        spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
         while (true) {
             try {
                 doTurn();
