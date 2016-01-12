@@ -5,33 +5,60 @@ import battlecode.common.*;
 public class GUARD {
 
     static RobotController rc;
+    static MapLocation myLocation;
+    static RobotInfo[] enemyRobots;
+    static RobotInfo[] enemyRobotsInAttackRange;
 
     public static void doTurn() throws GameActionException {
-        MapLocation myLocation = rc.getLocation();
-        RobotInfo[] enemyRobots = rc.senseNearbyRobots(rc.getLocation(), RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.enemyTeam);
-        RobotInfo[] enemyRobotsInAttackRange = rc.senseNearbyRobots(rc.getLocation(), RobotPlayer.rt.attackRadiusSquared, RobotPlayer.enemyTeam);
+        myLocation = rc.getLocation();
+        enemyRobots = rc.senseNearbyRobots(rc.getLocation(), RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.enemyTeam);
+        enemyRobotsInAttackRange = rc.senseNearbyRobots(rc.getLocation(), RobotPlayer.rt.attackRadiusSquared, RobotPlayer.enemyTeam);
 
 
 //        Utils.getDistressSignal();
 
         // TODO: Clear that debris
 
-        // first, flee if health is low
-        if (rc.getHealth() < RobotPlayer.rt.maxHealth / 4) {
+        if (fleeSinceWeekAndEnemiesNearby()) return;
+        if (moveToRallySinceWeak()) return;
+        if (attackSinceEnemiesNearby()) return;
+        if (advanceSinceEnemiesSensed()) return;
+        // TODO: move towards distress call
+        patrolPerimeter();
+    }
+
+    public static boolean fleeSinceWeekAndEnemiesNearby() throws GameActionException {
+        if (enemyRobotsInAttackRange.length > 0) {
             Direction toMove = Utils.flee(rc, enemyRobots, myLocation);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
-                return;
+                return true;
             }
         }
+        return false;
+    }
 
-        // second, attack if enemies nearby
-        if (enemyRobotsInAttackRange.length > 0) {
-            rc.attackLocation(enemyRobotsInAttackRange[0].location);
-            return;
+    public static boolean moveToRallySinceWeak() throws GameActionException {
+        if (rc.getHealth() < RobotPlayer.rt.maxHealth / 4) {
+            // move towards rally
+            Direction toMove = Utils.flee(rc, enemyRobots, myLocation);
+            if (toMove != Direction.NONE) {
+                rc.move(toMove);
+                return true;
+            }
         }
+        return false;
+    }
 
-        // third move towards closes enemy
+    public static boolean attackSinceEnemiesNearby() throws GameActionException {
+        if (rc.isWeaponReady() && enemyRobotsInAttackRange.length > 0) {
+            rc.attackLocation(enemyRobotsInAttackRange[0].location);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean advanceSinceEnemiesSensed() throws GameActionException {
         if (enemyRobots.length > 0) {
             int closestDistance  = 999999;
             RobotInfo closestEnemy = enemyRobots[0];
@@ -43,15 +70,13 @@ public class GUARD {
                 }
             }
             Utils.tryMove(myLocation.directionTo(closestEnemy.location));
-            return;
+            return true;
         }
+        return false;
+    }
 
-        // fourth, move towards distress call
-//        if () {
-//
-//        }
-
-        // fifth, move randomly
+    public static boolean patrolPerimeter() throws GameActionException {
+        return false;
     }
 
     public static void execute() {
