@@ -130,8 +130,12 @@ public class Utils {
 
     // wrapper for dirToLeastDamage that trys to make the move returns true if made the move
     public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyRobots, MapLocation myLocation, Direction d) throws GameActionException {
+        return moveInDirToLeastDamage(nearbyRobots, myLocation, d, null);
+    }
+
+    public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyRobots, MapLocation myLocation, Direction d, ArrayDeque<MapLocation> seen) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
-        d = Utils.dirToLeastDamage(nearbyRobots, myLocation, d);
+        d = Utils.dirToLeastDamage(nearbyRobots, myLocation, d, seen);
         if (d != Direction.NONE) {
             rc.move(d);
             return true;
@@ -140,7 +144,7 @@ public class Utils {
         return false;
     }
 
-    public static Direction dirToLeastDamage(RobotInfo[] enemyRobots, MapLocation myLocation, Direction d) throws GameActionException {
+    public static Direction dirToLeastDamage(RobotInfo[] enemyRobots, MapLocation myLocation, Direction d, ArrayDeque<MapLocation> seen) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
         MapLocation desiredLoc;
         double distanceAfterMovingTowards;
@@ -148,6 +152,7 @@ public class Utils {
         int minDamage = Integer.MAX_VALUE;
         Direction dirToMinDamage = Direction.NONE;
         int damageOnLoc;
+        boolean repeateLocation = false;
 
         int offsetIndex = 0;
         int[] offsets = {0,1,-1,2,-2,3,-3,4};
@@ -157,6 +162,21 @@ public class Utils {
             offsetIndex++;
 
             desiredLoc = myLocation.add(d);
+            repeateLocation = false;
+
+            if (seen != null) {
+                for (MapLocation m : seen) {
+                    repeateLocation = m.equals(desiredLoc);
+                    if (repeateLocation) {
+                        break;
+                    }
+                }
+
+                if (repeateLocation) {
+                    continue;
+                }
+            }
+
             if (rc.canMove(d)) {
 
                 damageOnLoc = 0;
@@ -191,7 +211,6 @@ public class Utils {
                 }
             }
         }
-
         return dirToMinDamage;
     }
 

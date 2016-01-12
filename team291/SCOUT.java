@@ -99,21 +99,6 @@ public class SCOUT {
             }
         }
 
-//        MapLocation[] sensableLocations = Utils.getSensableLocations(myLocation);
-//        for (MapLocation m: sensableLocations) {
-//            if (m == null) {
-//                break;
-//            }
-//
-//            // TODO: decide if we should only do this if there is little rubble
-//            if (rc.senseParts(m) > 0 && rc.senseRubble(m) < 100) {
-//                broadcastLandMark = Utils.MessageType.PART_LOCATION;
-//                goal = m;
-//                state = ScoutState.REPORTING_AOI;
-//                reportAOI();
-//                return;
-//            }
-//        }
 
         for (RobotInfo r: nearbyRobots) {
             if (r.team == Team.NEUTRAL) {

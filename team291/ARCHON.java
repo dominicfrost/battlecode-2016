@@ -1,9 +1,7 @@
 package team291;
 
 import battlecode.common.*;
-import javafx.scene.shape.Arc;
 
-import java.awt.*;
 import java.util.ArrayDeque;
 
 public class ARCHON {
@@ -11,21 +9,23 @@ public class ARCHON {
     public static MapLocation myLocation;
     public static ArrayDeque<Signal> signals;
     public static RobotController rc;
-//    public static int separation = 15;
     private static boolean isCoreReady;
 
     private static ArchonState state = ArchonState.NONE;
     private static MapLocation rallyPoint;
     private static MapLocation aoi;
 
+    private static ArrayDeque<MapLocation> seen = new ArrayDeque<>();
+
     public static enum ArchonState {
         NONE,
         MOVING_TO_RALLY,
         CHILLIN_AT_RALLY,
+        FLEEING,
         REPORTING_TO_AOI,
         RETURING_TO_RALLY,
         HIDING_FROM_THE_ZOMBIE_SPAWN_LIKE_A_BITCH
-    }//use maploc and keepupdating it while rporting to aoi
+    }
 
     public static void doTurn() throws GameActionException {
         isCoreReady = rc.isCoreReady();
@@ -38,12 +38,12 @@ public class ARCHON {
                 getRallyLocation();
                 break;
             case MOVING_TO_RALLY:
-                if (isCoreReady && flee()) return;
+                if (isCoreReady && shouldFlee()) return;
                 returnToRally();
                 break;
             case CHILLIN_AT_RALLY:
                 if (isCoreReady) {
-                    if (flee()) return;
+                    if (shouldFlee()) return;
                     if (repair()) return;
                     if (spawn()) return;
                     if (activate()) return;
@@ -51,9 +51,12 @@ public class ARCHON {
                 }
                 chill();
                 break;
+            case FLEEING:
+                flee();
+                break;
             case REPORTING_TO_AOI:
                 if (isCoreReady) {
-                    if (flee()) {
+                    if (shouldFlee()) {
                         state = ArchonState.RETURING_TO_RALLY;
                         return;
                     }
@@ -65,7 +68,7 @@ public class ARCHON {
                 break;
             case RETURING_TO_RALLY:
                 if (isCoreReady) {
-                    if (flee()) return;
+                    if (shouldFlee()) return;
                     if (activate()) return;
                     if (repair()) return;
                     if (moveToParts()) return;
@@ -75,7 +78,7 @@ public class ARCHON {
                 break;
             case HIDING_FROM_THE_ZOMBIE_SPAWN_LIKE_A_BITCH:
                 if (isCoreReady) {
-                    if (flee()) return;
+                    if (shouldFlee()) return;
                     if (repair()) return;
                     Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
                 }
@@ -83,22 +86,30 @@ public class ARCHON {
         }
     }
 
-    public static boolean flee() throws GameActionException {
+    public static boolean shouldFlee() throws GameActionException {
         if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
-//            Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
-//            if (toMove != Direction.NONE) {
-//                rc.move(toMove);
-//
-//                //System.out.println("flee");
-//                return true;
-//            }
-
-            MapLocation d = Utils.enemyAvgLoc(nearbyRobots, myLocation);
-            Direction dirToAllies = myLocation.directionTo(d);
-            if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, dirToAllies.opposite())) return true;
+            seen.clear();
+            state = ArchonState.FLEEING;
+            flee();
+            return true;
         }
 
         return false;
+    }
+
+    public static void flee() throws GameActionException {
+        if (!Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
+            state = ArchonState.RETURING_TO_RALLY;
+            returnToRally();
+            return;
+        }
+
+        if (isCoreReady) {
+            if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint), seen)) {
+                seen.add(myLocation);
+                if (seen.size() > 20) seen.pop();
+            }
+        }
     }
 
     public static boolean repair() throws GameActionException {
@@ -145,7 +156,7 @@ public class ARCHON {
                     //System.out.println("activate");
                     return true;
                 }
-                Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(r.location));
+                Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(r.location), null);
                 if (d != Direction.NONE) {
                     rc.move(d);
                     //System.out.println("activate");
@@ -282,7 +293,7 @@ public class ARCHON {
 
     public static boolean randomMove() throws GameActionException {
         if (isCoreReady) {
-            Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) % RobotPlayer.directions.length]);
+            Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) % RobotPlayer.directions.length], null);
             if (d != Direction.NONE) {
                 rc.move(d);
                 return true;
