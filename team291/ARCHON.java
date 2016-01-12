@@ -25,7 +25,7 @@ public class ARCHON {
         REPORTING_TO_AOI,
         RETURING_TO_RALLY,
         HIDING_FROM_THE_ZOMBIE_SPAWN_LIKE_A_BITCH
-    }
+    }//use maploc and keepupdating it while rporting to aoi
 
     public static void doTurn() throws GameActionException {
         isCoreReady = rc.isCoreReady();
@@ -85,16 +85,18 @@ public class ARCHON {
 
     public static boolean flee() throws GameActionException {
         if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
-            Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
-            if (toMove != Direction.NONE) {
-                rc.move(toMove);
+//            Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
+//            if (toMove != Direction.NONE) {
+//                rc.move(toMove);
+//
+//                //System.out.println("flee");
+//                return true;
+//            }
 
-                //System.out.println("flee");
-                return true;
-            }
-
-            Direction dirToAllies = myLocation.directionTo(rallyPoint);
-            if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, dirToAllies)) return true;
+            MapLocation d = Utils.enemyAvgLoc(nearbyRobots, myLocation);
+            if (RobotPlayer.id == 3609) System.out.println(d);
+            Direction dirToAllies = myLocation.directionTo(d);
+            if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, dirToAllies.opposite())) return true;
         }
 
         return false;

@@ -76,6 +76,18 @@ public class SCOUT {
 
     private static void searchForAOIs() throws GameActionException {
 
+        //TODO : decide fi we should not broadcast when enemy robots close to aoi
+
+        for (RobotInfo r: nearbyRobots) {
+            if (r.type == RobotType.ZOMBIEDEN) {
+                broadcastLandMark = Utils.MessageType.DEN;
+                goal = r.location;
+                state = ScoutState.REPORTING_AOI;
+                reportAOI();
+                return;
+            }
+        }
+
         MapLocation[] sensableLocations = Utils.getSensableLocations(myLocation);
         for (MapLocation m: sensableLocations) {
             if (m == null) {

@@ -9,6 +9,7 @@ public class Utils {
         // scout msgs
         NEUTRAL_ROBOT_LOCATION,
         PART_LOCATION,
+        DEN,
         AOI_CONFIRMED,
     }
 
@@ -72,7 +73,7 @@ public class Utils {
 
                 //iterate through each enemy bot
                 for (RobotInfo robot : enemyRobots) {
-                    if (robot.team == RobotPlayer.myTeam || robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
+                    if (robot.team == RobotPlayer.myTeam || robot.team == Team.NEUTRAL || robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
                         continue;
                     }
 
@@ -108,7 +109,7 @@ public class Utils {
     public static boolean shouldFlee(RobotController rc, RobotInfo[] enemyRobots, MapLocation loc) throws GameActionException {
         double distanceAfterMovingTowards;
         for (RobotInfo robot: enemyRobots) {
-            if (robot.team == RobotPlayer.myTeam || robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
+            if (robot.team == RobotPlayer.myTeam || robot.team == Team.NEUTRAL || robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
                 continue;
             }
 
@@ -252,6 +253,27 @@ public class Utils {
         } else {
             return tryMove(toNext);
         }
+    }
+
+    public static MapLocation enemyAvgLoc(RobotInfo[] nearbyRobots, MapLocation myLocation) {
+        int x = 0;
+        int y = 0;
+        int count = 0;
+        MapLocation movetwrds;
+        for(RobotInfo robot: nearbyRobots) {
+            if (robot.team == RobotPlayer.myTeam || robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
+                continue;
+            }
+
+            movetwrds = robot.location.add(robot.location.directionTo(myLocation));
+            if (movetwrds.distanceSquaredTo(myLocation) <= robot.type.attackRadiusSquared) {
+                x += movetwrds.x;
+                y += movetwrds.y;
+                count++;
+            }
+        }
+
+        return new MapLocation(x/count, y/count);
     }
 
 
