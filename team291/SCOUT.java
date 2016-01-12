@@ -76,6 +76,30 @@ public class SCOUT {
 
     private static void searchForAOIs() throws GameActionException {
 
+        //TODO : decide fi we should not broadcast when enemy robots close to aoi
+
+        for (RobotInfo r: nearbyRobots) {
+            if (r.type == RobotType.ZOMBIEDEN) {
+                broadcastLandMark = Utils.MessageType.DEN;
+                goal = r.location;
+                state = ScoutState.REPORTING_AOI;
+                reportAOI();
+                return;
+            }
+        }
+
+
+        MapLocation[] partLocations = rc.sensePartLocations(myLocation);
+        for (MapLocation m: partLocations) {
+            if (rc.senseRubble(m) < 100) {
+                broadcastLandMark = Utils.MessageType.PART_LOCATION;
+                goal = m;
+                state = ScoutState.REPORTING_AOI;
+                reportAOI();
+                return;
+            }
+        }
+
         MapLocation[] sensableLocations = Utils.getSensableLocations(myLocation);
         for (MapLocation m: sensableLocations) {
             if (m == null) {
@@ -83,7 +107,7 @@ public class SCOUT {
             }
 
             // TODO: decide if we should only do this if there is little rubble
-            if (rc.senseParts(m) > 0 && rc.senseRubble(m) < 50) {
+            if (rc.senseParts(m) > 0 && rc.senseRubble(m) < 100) {
                 broadcastLandMark = Utils.MessageType.PART_LOCATION;
                 goal = m;
                 state = ScoutState.REPORTING_AOI;
