@@ -14,7 +14,6 @@ public class TURRET {
         nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
-        if (Utils.attackGoalIfPossible(signals)) return;
         if (attackAnythingClose()) return;
     }
 

@@ -38,10 +38,7 @@ public class ARCHON {
                 getRallyLocation();
                 break;
             case MOVING_TO_RALLY:
-                if (isCoreReady) {
-                    if (flee()) return;
-                    if (activate()) return;
-                }
+                if (isCoreReady && flee()) return;
                 returnToRally();
                 break;
             case CHILLIN_AT_RALLY:
@@ -56,7 +53,10 @@ public class ARCHON {
                 break;
             case REPORTING_TO_AOI:
                 if (isCoreReady) {
-                    if (flee()) return;
+                    if (flee()) {
+                        state = ArchonState.RETURING_TO_RALLY;
+                        return;
+                    }
                     if (activate()) return;
                     if (repair()) return;
                 }
@@ -86,8 +86,6 @@ public class ARCHON {
     public static boolean flee() throws GameActionException {
         if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
             Direction toMove = Utils.flee(rc, nearbyRobots, myLocation);
-            if (RobotPlayer.id == 1691) System.out.println(toMove);
-
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
 
@@ -124,7 +122,15 @@ public class ARCHON {
 
     public static boolean spawn() throws GameActionException {
         if (rc.hasBuildRequirements(RobotType.TURRET)) {
-            return spawnTurret();
+            int fate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+
+            if (fate < 90) {
+                return spawnTurret();
+            }
+
+            if (fate < 100) {
+                return trySpawn(Direction.NORTH, RobotType.SCOUT);
+            }
         }
 
         return false;
@@ -224,11 +230,21 @@ public class ARCHON {
     public static void chill() throws GameActionException {
         if (!rc.hasBuildRequirements(RobotType.TURRET)) {
             int[] msg;
+
+            ogLoop:
             for (Signal s : signals) {
                 msg = s.getMessage();
                 if (msg[0] == Utils.MessageType.PART_LOCATION.ordinal() || msg[0] == Utils.MessageType.NEUTRAL_ROBOT_LOCATION.ordinal()) {
+                    int signalId = s.getID();
+                    for (Signal s2: signals) {
+                        if (s2.getMessage()[0] == Utils.MessageType.AOI_CONFIRMED.ordinal() && s2.getMessage()[1] == signalId) {
+                            continue ogLoop;
+                        }
+                    }
+
                     aoi = Utils.deserializeMapLocation(msg[1]);
                     state = ArchonState.REPORTING_TO_AOI;
+                    rc.broadcastMessageSignal(Utils.MessageType.AOI_CONFIRMED.ordinal(), signalId, RobotPlayer.maxSignalRange);
                     return;
                 }
             }

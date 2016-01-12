@@ -14,6 +14,7 @@ public class RobotPlayer {
     public static int maxSignalRange;
     public static RobotController rc;
     public static int id;
+//    public static int[] zombieSpawnRounds;
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -32,12 +33,13 @@ public class RobotPlayer {
         robotTypes = _robotTypes;
         id = rc.getID();
 
+
         rand = new Random(rc.getID());
         myTeam = rc.getTeam();
         enemyTeam = myTeam.opponent();
         rt = rc.getType();
         maxSignalRange = rt.sensorRadiusSquared;// * 2 - 1;
-        rc.emptySignalQueue();
+//        rc.emptySignalQueue();
 
 
         switch (rt) {

@@ -9,7 +9,7 @@ public class Utils {
         // scout msgs
         NEUTRAL_ROBOT_LOCATION,
         PART_LOCATION,
-        ENEMY_LOCATION,
+        AOI_CONFIRMED,
     }
 
     public static boolean attack(MapLocation loc) throws GameActionException {
@@ -43,7 +43,7 @@ public class Utils {
         // arraylists are bad, since i know max archons mine as well use that
         for (Signal signal: signals) {
             distTo = signal.getLocation().distanceSquaredTo(myLocation);
-            if (signal.getTeam() == RobotPlayer.myTeam && distTo < closest) {
+            if (signal.getTeam() == RobotPlayer.myTeam && signal.getMessage() == null && distTo < closest) {
                 toReturn = signal;
                 closest = distTo;
             }
@@ -51,21 +51,6 @@ public class Utils {
 
         return toReturn;
     }
-
-    public static boolean attackGoalIfPossible(ArrayDeque<Signal> signals) throws GameActionException {
-        int[] msg;
-        MapLocation sigLoc;
-        for (Signal signal: signals) {
-            msg = signal.getMessage();
-            if (msg[0] == MessageType.ENEMY_LOCATION.ordinal()) {
-                sigLoc = deserializeMapLocation(msg[1]);
-                if (attack(sigLoc)) return true;
-            }
-        }
-
-        return false;
-    }
-
 
 
     /*
@@ -283,7 +268,7 @@ public class Utils {
     }
 
     public static MapLocation deserializeMapLocation(int i) {
-        return new MapLocation(getLeft(i), getRight(i));
+     return new MapLocation(getLeft(i), getRight(i));
     }
 
     public static int directionToInt(Direction d) throws GameActionException {
