@@ -126,8 +126,12 @@ public class ARCHON {
         if (rc.hasBuildRequirements(RobotType.TURRET)) {
             int fate = Math.abs(RobotPlayer.rand.nextInt() % 100);
 
-            if (fate < 90) {
+            if (fate < 50) {
                 return spawnTurret();
+            }
+
+            if (fate < 95) {
+                return spawnGuard();
             }
 
             if (fate < 100) {
@@ -304,9 +308,15 @@ public class ARCHON {
             }
         }
 
-        if (randomMove()) return true;
+        return randomMove();
+    }
 
-        return false;
+    public static boolean spawnGuard() throws GameActionException{
+        if (!trySpawn(Direction.NORTH, RobotType.GUARD)) {
+            return false;
+        }
+        rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION.ordinal(), Utils.serializeMapLocation(rallyPoint), RobotPlayer.rt.sensorRadiusSquared);
+        return true;
     }
 
     // This method will attempt to spawn in the given direction (or as close to it as possible)

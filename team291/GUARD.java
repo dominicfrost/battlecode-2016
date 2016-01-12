@@ -6,14 +6,28 @@ public class GUARD {
 
     static RobotController rc;
     static MapLocation myLocation;
-    static RobotInfo[] enemyRobots;
-    static RobotInfo[] enemyRobotsInAttackRange;
+    static RobotInfo[] hostileRobots;
+    static RobotInfo[] hostileRobotsInAttackRange;
+
+    private static MapLocation rallyPoint;
+
+    private static GuardStates state = GuardStates.AGGRO;
+
+    private static enum GuardStates {
+        AGGRO,
+        HURT
+    }
 
     public static void doTurn() throws GameActionException {
         myLocation = rc.getLocation();
-        enemyRobots = rc.senseNearbyRobots(rc.getLocation(), RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.enemyTeam);
-        enemyRobotsInAttackRange = rc.senseNearbyRobots(rc.getLocation(), RobotPlayer.rt.attackRadiusSquared, RobotPlayer.enemyTeam);
+        hostileRobots = rc.senseHostileRobots(rc.getLocation(), RobotPlayer.rt.sensorRadiusSquared);
+        hostileRobotsInAttackRange = rc.senseHostileRobots(rc.getLocation(), RobotPlayer.rt.attackRadiusSquared);
 
+        if (state != GuardStates.HURT && rc.getHealth() < RobotPlayer.rt.maxHealth / 4) {
+            state = GuardStates.HURT;
+        } else if (state != GuardStates.AGGRO && rc.getHealth() == RobotPlayer.rt.maxHealth){
+            state = GuardStates.AGGRO;
+        }
 
 //        Utils.getDistressSignal();
 
@@ -28,8 +42,8 @@ public class GUARD {
     }
 
     public static boolean fleeSinceWeekAndEnemiesNearby() throws GameActionException {
-        if (enemyRobotsInAttackRange.length > 0) {
-            Direction toMove = Utils.flee(rc, enemyRobots, myLocation);
+        if (hostileRobotsInAttackRange.length > 0 && state == GuardStates.HURT) {
+            Direction toMove = Utils.flee(rc, hostileRobots, myLocation);
             if (toMove != Direction.NONE) {
                 rc.move(toMove);
                 return true;
@@ -39,30 +53,29 @@ public class GUARD {
     }
 
     public static boolean moveToRallySinceWeak() throws GameActionException {
-        if (rc.getHealth() < RobotPlayer.rt.maxHealth / 4) {
+        if (state == GuardStates.HURT) {
             // move towards rally
-            Direction toMove = Utils.flee(rc, enemyRobots, myLocation);
-            if (toMove != Direction.NONE) {
-                rc.move(toMove);
-                return true;
-            }
+            Utils.tryMove(myLocation.directionTo(rallyPoint));
+            return true;
         }
         return false;
     }
 
     public static boolean attackSinceEnemiesNearby() throws GameActionException {
-        if (rc.isWeaponReady() && enemyRobotsInAttackRange.length > 0) {
-            rc.attackLocation(enemyRobotsInAttackRange[0].location);
+        if (hostileRobotsInAttackRange.length > 0) {
+            if (rc.isWeaponReady()) {
+                rc.attackLocation(hostileRobotsInAttackRange[0].location);
+            }
             return true;
         }
         return false;
     }
 
     public static boolean advanceSinceEnemiesSensed() throws GameActionException {
-        if (enemyRobots.length > 0) {
+        if (hostileRobots.length > 0) {
             int closestDistance  = 999999;
-            RobotInfo closestEnemy = enemyRobots[0];
-            for (RobotInfo enemyRobot: enemyRobots) {
+            RobotInfo closestEnemy = hostileRobots[0];
+            for (RobotInfo enemyRobot: hostileRobots) {
                 int distanceToRobot = myLocation.distanceSquaredTo(enemyRobot.location);
                 if (distanceToRobot < closestDistance) {
                     closestDistance = distanceToRobot;
@@ -76,11 +89,20 @@ public class GUARD {
     }
 
     public static boolean patrolPerimeter() throws GameActionException {
-        return false;
+        return Utils.tryMoveWithinPerimeter(rallyPoint, Utils.getRandomDirection());
     }
 
     public static void execute() {
         rc = RobotPlayer.rc;
+
+        Signal signal = rc.readSignal();
+        if (signal.getMessage()[0] == Utils.MessageType.RALLY_LOCATION.ordinal()) {
+            rallyPoint = Utils.deserializeMapLocation(signal.getMessage()[1]);
+        } else {
+            rallyPoint = rc.getLocation();
+            System.out.println("UHHHH WTF?!? HOW IS THE FIRST SIGNAL NOT A RALLY_LOCATION SIGNAL?!?!");
+        }
+
 
         while (true) {
             try {

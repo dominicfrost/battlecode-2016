@@ -2,6 +2,7 @@ package team291;
 
 import battlecode.common.*;
 
+import java.awt.*;
 import java.util.ArrayDeque;
 
 public class Utils {
@@ -11,6 +12,20 @@ public class Utils {
         PART_LOCATION,
         DEN,
         AOI_CONFIRMED,
+        RALLY_LOCATION,
+    }
+
+    public static Direction getRandomDirection() {
+        return RobotPlayer.directions[RobotPlayer.rand.nextInt(8)];
+    }
+
+    // Returns an int that will be the perimeter of the distanceSquared to the rally Point
+    public static int distanceSquaredToPerimeter() throws GameActionException {
+        int numRobots = RobotPlayer.rc.getRobotCount();
+        int weight = 6;
+
+        return Math.round((float) (numRobots * weight / Math.PI));
+
     }
 
     public static boolean attack(MapLocation loc) throws GameActionException {
@@ -213,6 +228,7 @@ public class Utils {
         return false;
     }
 
+
     public static MapLocation[] getSensableLocations(MapLocation myLocation) {
         RobotController rc = RobotPlayer.rc;
 
@@ -244,16 +260,30 @@ public class Utils {
         return toReturn;
     }
 
-    public static boolean moveThrough(MapLocation myLocation, MapLocation goal) throws GameActionException {
+
+    // This method will attempt to move in Direction d (or as close to it as possible), while staying within the perimeter.
+    public static boolean tryMoveWithinPerimeter(MapLocation rallyPoint, Direction d) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
-        Direction toNext = myLocation.directionTo(goal);
-        if (rc.senseRubble(myLocation.add(toNext)) > 50) {
-            rc.clearRubble(toNext);
-            return true;
-        } else {
-            return tryMove(toNext);
+
+        int offsetIndex = 0;
+        int[] offsets = {0,1,-1,2,-2};
+        int dirint = directionToInt(d);
+        while (offsetIndex < 5 && (!canMoveWithinPerimeter(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8], rallyPoint))) {
+            offsetIndex++;
         }
+        if (offsetIndex < 5) {
+            rc.move(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8]);
+            return true;
+        }
+
+        return false;
     }
+
+    public static boolean canMoveWithinPerimeter(Direction d, MapLocation rallyPoint) throws GameActionException {
+        RobotController rc = RobotPlayer.rc;
+        return rc.canMove(d) && rallyPoint.distanceSquaredTo(rc.getLocation().add(d)) < distanceSquaredToPerimeter();
+    }
+
 
     public static MapLocation enemyAvgLoc(RobotInfo[] nearbyRobots, MapLocation myLocation) {
         int x = 0;
@@ -315,5 +345,4 @@ public class Utils {
                 return 0;
         }
     }
-
 }
