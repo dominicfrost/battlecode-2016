@@ -88,7 +88,6 @@ public class SCOUT {
             }
         }
 
-
         MapLocation[] partLocations = rc.sensePartLocations(myLocation);
         for (MapLocation m: partLocations) {
             if (rc.senseRubble(m) < 100) {
