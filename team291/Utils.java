@@ -303,6 +303,16 @@ public class Utils {
         return rc.canMove(d) && rallyPoint.distanceSquaredTo(rc.getLocation().add(d)) < distanceSquaredToPerimeter();
     }
 
+    public static boolean moveThrough(MapLocation myLocation, MapLocation goal) throws GameActionException {
+        RobotController rc = RobotPlayer.rc;
+        Direction toNext = myLocation.directionTo(goal);
+        if (rc.senseRubble(myLocation.add(toNext)) > 50) {
+            rc.clearRubble(toNext);
+            return true;
+        } else {
+            return tryMove(toNext);
+        }
+    }
 
     public static MapLocation enemyAvgLoc(RobotInfo[] nearbyRobots, MapLocation myLocation) {
         int x = 0;
