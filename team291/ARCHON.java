@@ -203,37 +203,22 @@ public class ARCHON {
     }
 
     public static void getRallyLocation() throws GameActionException {
-        Clock.yield();
-        rc.broadcastMessageSignal(0, 0, 10000);
-        Clock.yield();
-
-        signals = Utils.getScoutSignals(rc.emptySignalQueue());
         int sum;
-        int lowest = 0;
-        int lowestRobotId = RobotPlayer.id;
+        int lowest = 9999999;
         rallyPoint = myLocation;
+        MapLocation[] archonLocs = rc.getInitialArchonLocations(RobotPlayer.myTeam);
 
-        for (Signal s: signals) {
-            lowest += myLocation.distanceSquaredTo(s.getLocation()); // lowest is initialy my location to all others
-        }
-
-        for (Signal s1: signals) {
-            sum = myLocation.distanceSquaredTo(s1.getLocation()); //start sum at distance to mylocation
-            for (Signal s2: signals) {
-                if (!s2.equals(s1)) {
-                    sum += s1.getLocation().distanceSquaredTo(s2.getLocation()); // add distance to other signal
+        for (MapLocation m1: archonLocs) {
+            sum = 0;
+            for (MapLocation m2: archonLocs) {
+                if (!m1.equals(m2)) {
+                    sum += m1.distanceSquaredTo(m2); // add distance to other signal
                 }
             }
+
             if (sum < lowest) {
-                rallyPoint = s1.getLocation();
+                rallyPoint = m1;
                 lowest = sum;
-                lowestRobotId = s1.getRobotID();
-            }
-            // lower robot id breaks the tie
-            if (sum == lowest && s1.getRobotID() < lowestRobotId) {
-                rallyPoint = s1.getLocation();
-                lowest = sum;
-                lowestRobotId = s1.getRobotID();
             }
         }
 
