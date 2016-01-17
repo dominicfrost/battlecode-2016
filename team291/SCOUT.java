@@ -54,15 +54,8 @@ public class SCOUT {
                 searchForAOIs();
                 break;
             case SEARCHING_FOR_AOI:
-                if (isCoreReady && flee()) {
-                    state = ScoutState.RESETTING_SEARCH_DIRECTION;
-                    return;
-                }
-                searchForAOIs();
-                break;
-            case RESETTING_SEARCH_DIRECTION:
                 if (isCoreReady && flee()) return;
-                resetSearchDir();
+                searchForAOIs();
                 break;
             case REPORTING_AOI:
                 if (isCoreReady && flee()) return;
@@ -86,7 +79,6 @@ public class SCOUT {
 
         //TODO : decide fi we should not broadcast when enemy robots close to aoi
         // find turret attack locations, this may be too inefficient
-
         double dstSqr;
         for (RobotInfo r: nearbyAllies) {
             if (r.type == RobotType.TURRET) {
@@ -136,25 +128,7 @@ public class SCOUT {
             return;
         }
 
-
-        // if i hit a wall change my random dir
-        if (myLocation.distanceSquaredTo(rallyPoint) > maxAOIDistance || !rc.canMove(myRandomDir)) {
-            state = ScoutState.RESETTING_SEARCH_DIRECTION;
-            if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
-            return;
-        }
-
         if (isCoreReady) circle();
-    }
-
-    public static void resetSearchDir() throws GameActionException {
-        if (myLocation.distanceSquaredTo(rallyPoint) < 15) {
-            myRandomDir = RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) % 8];
-            state = ScoutState.SEARCHING_FOR_AOI;
-            return;
-        }
-
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
     }
 
     public static void reportAOI() throws GameActionException {
@@ -189,7 +163,6 @@ public class SCOUT {
             circlingDir = (circlingDir + 2) % 8;
             if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, RobotPlayer.directions[circlingDir])) return true;
         }
-
 
         return Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
     }
