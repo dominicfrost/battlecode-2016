@@ -100,13 +100,14 @@ public class GUARD {
     public static void execute() {
         rc = RobotPlayer.rc;
 
-        Signal signal = rc.readSignal();
-        if (signal.getMessage()[0] == Utils.MessageType.RALLY_LOCATION.ordinal()) {
-            rallyPoint = Utils.deserializeMapLocation(signal.getMessage()[1]);
-        } else {
-            rallyPoint = rc.getLocation();
-            System.out.println("UHHHH WTF?!? HOW IS THE FIRST SIGNAL NOT A RALLY_LOCATION SIGNAL?!?!");
-        }
+//        Signal signal = rc.readSignal();
+//        if (signal.getMessage()[0] == Utils.MessageType.RALLY_LOCATION.ordinal()) {
+//            rallyPoint = Utils.deserializeMapLocation(signal.getMessage()[1]);
+//        } else {
+//            rallyPoint = rc.getLocation();
+//            System.out.println("UHHHH WTF?!? HOW IS THE FIRST SIGNAL NOT A RALLY_LOCATION SIGNAL?!?!");
+//        }
+        rallyPoint = Utils.getRallyLocation();
 
 
         while (true) {

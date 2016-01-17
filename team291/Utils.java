@@ -373,12 +373,6 @@ public class Utils {
      return new MapLocation(getLeft(i), getRight(i));
     }
 
-    public static RobotInfo[] concatRobotLists(RobotInfo[] array1, RobotInfo[] array2) {
-        RobotInfo[] array1and2 = new RobotInfo[array1.length + array2.length];
-        System.arraycopy(array1, 0, array1and2, 0, array1.length);
-        System.arraycopy(array2, 0, array1and2, array1.length, array2.length);
-        return array1and2;
-    }
 
     public static int directionToInt(Direction d) throws GameActionException {
         switch(d) {

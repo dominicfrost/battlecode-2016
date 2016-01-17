@@ -24,6 +24,8 @@ public class SCOUT {
     public static Utils.MessageType broadcastLandMark;
     public static Direction myRandomDir = Direction.NORTH;
 
+    public static int circlingDir;
+
     public static enum ScoutState {
         NONE,
         SEARCHING_FOR_AOI,
@@ -46,7 +48,8 @@ public class SCOUT {
 
         switch (state) {
             case NONE:
-                rallyPoint = myLocation;
+                circlingDir = getRandomCirclingDir();
+                rallyPoint = Utils.getRallyLocation();
                 state = ScoutState.SEARCHING_FOR_AOI;
                 searchForAOIs();
                 break;
@@ -141,7 +144,7 @@ public class SCOUT {
             return;
         }
 
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myRandomDir);
+        if (isCoreReady) circle();
     }
 
     public static void resetSearchDir() throws GameActionException {
@@ -168,6 +171,36 @@ public class SCOUT {
             }
         }
         if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
+    }
+
+    public static boolean circle() throws GameActionException {
+        MapLocation next = myLocation.add(RobotPlayer.directions[circlingDir]);
+        if (next.distanceSquaredTo(rallyPoint) <= RobotPlayer.rt.sensorRadiusSquared && rc.onTheMap(next)) {
+            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, RobotPlayer.directions[circlingDir])) return true;
+        }
+
+        next = myLocation.add(RobotPlayer.directions[(circlingDir + 1) % 8]);
+        if (next.distanceSquaredTo(rallyPoint) <= RobotPlayer.rt.sensorRadiusSquared && rc.onTheMap(next)) {
+            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, RobotPlayer.directions[(circlingDir + 1) % 8])) return true;
+        }
+
+        next = myLocation.add(RobotPlayer.directions[(circlingDir + 2) % 8]);
+        if (next.distanceSquaredTo(rallyPoint) <= RobotPlayer.rt.sensorRadiusSquared && rc.onTheMap(next)) {
+            circlingDir = (circlingDir + 2) % 8;
+            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, RobotPlayer.directions[circlingDir])) return true;
+        }
+
+
+        return Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
+    }
+
+    public static int getRandomCirclingDir() {
+        int d = Math.abs(RobotPlayer.rand.nextInt()) % 8;
+        if (d % 2 == 1) {
+            d--;
+        }
+
+        return d;
     }
 
     public static void execute() {
