@@ -5,7 +5,8 @@ import battlecode.common.*;
 import java.util.ArrayDeque;
 
 public class ARCHON {
-    public static RobotInfo[] nearbyRobots;
+    public static RobotInfo[] nearbyAllies;
+    public static RobotInfo[] nearbyEnemies;
     public static MapLocation myLocation;
     public static ArrayDeque<Signal> signals;
     public static RobotController rc;
@@ -31,8 +32,11 @@ public class ARCHON {
 
     public static void doTurn() throws GameActionException {
         isCoreReady = rc.isCoreReady();
-        nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
+
+        nearbyAllies = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam);
+        nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
+
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
 
         switch (state) {
@@ -46,8 +50,8 @@ public class ARCHON {
             case CHILLIN_AT_RALLY:
                 if (isCoreReady) {
                     if (shouldFlee()) return;
-                    if (repair()) return;
                     if (spawn()) return;
+                    if (repair()) return;
                     if (activate()) return;
                     if (moveToParts()) return;
                 }
@@ -82,14 +86,14 @@ public class ARCHON {
                 if (isCoreReady) {
                     if (shouldFlee()) return;
                     if (repair()) return;
-                    Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+                    Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
                 }
                 break;
         }
     }
 
     public static boolean shouldFlee() throws GameActionException {
-        if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
+        if (Utils.shouldFlee(nearbyEnemies, myLocation)) {
             seen.clear();
             state = ArchonState.FLEEING;
             flee();
@@ -100,14 +104,14 @@ public class ARCHON {
     }
 
     public static void flee() throws GameActionException {
-        if (!Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
+        if (!Utils.shouldFlee(nearbyEnemies, myLocation)) {
             state = ArchonState.RETURING_TO_RALLY;
             returnToRally();
             return;
         }
 
         if (isCoreReady) {
-            if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint), seen)) {
+            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint), seen)) {
                 seen.add(myLocation);
                 if (seen.size() > 20) seen.pop();
             }
@@ -118,8 +122,8 @@ public class ARCHON {
         double lowestHealth = 1001;
         MapLocation lowestHealthLocation = null;
 
-        for (RobotInfo r: nearbyRobots) {
-            if (r.team == RobotPlayer.myTeam && myLocation.distanceSquaredTo(r.location) <= RobotPlayer.rt.attackRadiusSquared && r.health < lowestHealth && r.type != RobotType.ARCHON && r.health != r.type.maxHealth) {
+        for (RobotInfo r: nearbyAllies) {
+            if (myLocation.distanceSquaredTo(r.location) <= RobotPlayer.rt.attackRadiusSquared && r.health < lowestHealth && r.type != RobotType.ARCHON && r.health != r.type.maxHealth) {
                 lowestHealthLocation = r.location;
                 lowestHealth = r.health;
             }
@@ -166,20 +170,14 @@ public class ARCHON {
     }
 
     public static boolean activate() throws GameActionException {
-        for (RobotInfo r: nearbyRobots) {
-            if (r.team == Team.NEUTRAL) {
-                if (r.location.distanceSquaredTo(myLocation) < 2) {
-                    rc.activate(r.location);
-                    //System.out.println("activate");
-                    return true;
-                }
-                Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(r.location), null);
-                if (d != Direction.NONE) {
-                    rc.move(d);
-                    //System.out.println("activate");
-                    return true;
-                }
+        RobotInfo[] neutrals = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, Team.NEUTRAL);
+        for (RobotInfo r: neutrals) {
+            if (r.location.distanceSquaredTo(myLocation) < 2) {
+                rc.activate(r.location);
+                //System.out.println("activate");
+                return true;
             }
+            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(r.location))) return true;
         }
         return false;
     }
@@ -203,25 +201,10 @@ public class ARCHON {
     }
 
     public static void getRallyLocation() throws GameActionException {
-        int sum;
-        int lowest = 9999999;
-        rallyPoint = myLocation;
-        MapLocation[] archonLocs = rc.getInitialArchonLocations(RobotPlayer.myTeam);
-
-        for (MapLocation m1: archonLocs) {
-            sum = 0;
-            for (MapLocation m2: archonLocs) {
-                if (!m1.equals(m2)) {
-                    sum += m1.distanceSquaredTo(m2); // add distance to other signal
-                }
-            }
-
-            if (sum < lowest) {
-                rallyPoint = m1;
-                lowest = sum;
-            }
+        rallyPoint = Utils.getRallyLocation();
+        if (myLocation.equals(rallyPoint)) {
+            trySpawn(Direction.NORTH, RobotType.SCOUT);
         }
-
         state = ArchonState.MOVING_TO_RALLY;
     }
 
@@ -264,7 +247,7 @@ public class ARCHON {
             }
 
             if (isCoreReady && myLocation.distanceSquaredTo(rallyPoint) > 9) {
-                Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+                Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
             }
         }
     }
@@ -294,15 +277,7 @@ public class ARCHON {
 
 
     public static boolean randomMove() throws GameActionException {
-        if (isCoreReady) {
-            Direction d = Utils.dirToLeastDamage(nearbyRobots, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) % RobotPlayer.directions.length], null);
-            if (d != Direction.NONE) {
-                rc.move(d);
-                return true;
-            }
-        }
-
-        return false;
+        return isCoreReady && Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, RobotPlayer.directions[Math.abs(RobotPlayer.rand.nextInt()) % RobotPlayer.directions.length]);
     }
 
     public static boolean spawnTurret() throws GameActionException {

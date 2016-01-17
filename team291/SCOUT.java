@@ -9,7 +9,9 @@ import java.util.ArrayDeque;
 public class SCOUT {
 
     public static RobotController rc;
-    public static RobotInfo[] nearbyRobots;
+    public static RobotInfo[] nearbyAllies;
+    public static RobotInfo[] nearbyEnemies;
+
     public static MapLocation myLocation;
     public static Signal[] signals;
     public static ArrayDeque<Signal> scoutSignals;
@@ -34,8 +36,11 @@ public class SCOUT {
 
     private static void doTurn() throws GameActionException {
         isCoreReady = rc.isCoreReady();
-        nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
+
+        nearbyAllies = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam);
+        nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
+
         signals = rc.emptySignalQueue();
         scoutSignals = Utils.getScoutSignals(signals);
 
@@ -64,9 +69,9 @@ public class SCOUT {
     }
 
     private static boolean flee() throws GameActionException {
-        if (Utils.shouldFlee(rc, nearbyRobots, myLocation)) {
+        if (Utils.shouldFlee(nearbyEnemies, myLocation)) {
             Direction dirToAllies = myLocation.directionTo(rallyPoint);
-            if (Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, dirToAllies)) return true;
+            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, dirToAllies)) return true;
         }
 
         return false;
@@ -77,16 +82,36 @@ public class SCOUT {
     private static void searchForAOIs() throws GameActionException {
 
         //TODO : decide fi we should not broadcast when enemy robots close to aoi
+        // find turret attack locations, this may be too inefficient
 
-        for (RobotInfo r: nearbyRobots) {
-            if (r.type == RobotType.ZOMBIEDEN) {
-                broadcastLandMark = Utils.MessageType.DEN;
-                goal = r.location;
-                state = ScoutState.REPORTING_AOI;
-                reportAOI();
-                return;
+        double dstSqr;
+        for (RobotInfo r: nearbyAllies) {
+            if (r.type == RobotType.TURRET) {
+                for (RobotInfo enemy: nearbyEnemies) {
+                    if (enemy.coreDelay >= 1) {
+                        dstSqr = r.location.distanceSquaredTo(enemy.location);
+                        if (dstSqr <= RobotType.TURRET.attackRadiusSquared && dstSqr > RobotType.TURRET.sensorRadiusSquared) {
+                            broadcastLandMark = Utils.MessageType.TURRET_TARGET;
+                            goal = enemy.location;
+                            state = ScoutState.REPORTING_AOI;
+                            reportAOI();
+                            return;
+                        }
+                    }
+                }
             }
         }
+
+
+//        for (RobotInfo r: enemyRobots) {
+//            if (r.type == RobotType.ZOMBIEDEN) {
+//                broadcastLandMark = Utils.MessageType.DEN;
+//                goal = r.location;
+//                state = ScoutState.REPORTING_AOI;
+//                reportAOI();
+//                return;
+//            }
+//        }
 
         MapLocation[] partLocations = rc.sensePartLocations(RobotPlayer.rt.sensorRadiusSquared);
         for (MapLocation m: partLocations) {
@@ -99,26 +124,24 @@ public class SCOUT {
             }
         }
 
-
-        for (RobotInfo r: nearbyRobots) {
-            if (r.team == Team.NEUTRAL) {
-                broadcastLandMark = Utils.MessageType.NEUTRAL_ROBOT_LOCATION;
-                goal = r.location;
-                state = ScoutState.REPORTING_AOI;
-                reportAOI();
-                return;
-            }
+        RobotInfo[] neutrals = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, Team.NEUTRAL);
+        if (neutrals.length > 0) {
+            broadcastLandMark = Utils.MessageType.NEUTRAL_ROBOT_LOCATION;
+            goal = neutrals[0].location;
+            state = ScoutState.REPORTING_AOI;
+            reportAOI();
+            return;
         }
 
 
         // if i hit a wall change my random dir
         if (myLocation.distanceSquaredTo(rallyPoint) > maxAOIDistance || !rc.canMove(myRandomDir)) {
             state = ScoutState.RESETTING_SEARCH_DIRECTION;
-            if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+            if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
             return;
         }
 
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myRandomDir);
+        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myRandomDir);
     }
 
     public static void resetSearchDir() throws GameActionException {
@@ -128,25 +151,23 @@ public class SCOUT {
             return;
         }
 
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
     }
 
     public static void reportAOI() throws GameActionException {
         if (isCoreReady && myLocation.equals(goal)) {
-            Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+            Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
             return;
         }
 
-        for (RobotInfo r: nearbyRobots) {
-            if (r.team == RobotPlayer.myTeam) {
-                if (r.type == RobotType.ARCHON) {
-                    rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
-                    state = ScoutState.SEARCHING_FOR_AOI;
-                    return;
-                }
+        for (RobotInfo r: nearbyAllies) {
+            if (r.type == RobotType.ARCHON) {
+                rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
+                state = ScoutState.SEARCHING_FOR_AOI;
+                return;
             }
         }
-        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyRobots, myLocation, myLocation.directionTo(rallyPoint));
+        if (isCoreReady) Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
     }
 
     public static void execute() {

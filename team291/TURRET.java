@@ -6,20 +6,40 @@ import java.util.ArrayDeque;
 
 public class TURRET {
     public static RobotController rc;
-    public static RobotInfo[] nearbyRobots;
+    public static RobotInfo[] nearbyEnemies;
     public static MapLocation myLocation;
     public static ArrayDeque<Signal> signals;
 
     public static void doTurn() throws GameActionException {
-        nearbyRobots = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared);
         myLocation = rc.getLocation();
+        nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
+
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
+
+        if (attackTurretLocations()) return;
         if (attackAnythingClose()) return;
     }
 
+    public static boolean attackTurretLocations() throws GameActionException {
+        int[] msg;
+        MapLocation enemyLoc;
+        for (Signal s: signals) {
+            msg = s.getMessage();
+            if (msg[0] == Utils.MessageType.TURRET_TARGET.ordinal()) {
+                enemyLoc = Utils.deserializeMapLocation(msg[1]);
+                if (rc.canAttackLocation(enemyLoc)) {
+                    rc.attackLocation(enemyLoc);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public static boolean attackAnythingClose() throws GameActionException {
-        for (RobotInfo r: nearbyRobots) {
-            if (r.team != RobotPlayer.myTeam && r.team != Team.NEUTRAL && Utils.attack(r.location)) return true;
+        for (RobotInfo r: nearbyEnemies) {
+            if (Utils.attack(r.location)) return true;
         }
 
         return false;

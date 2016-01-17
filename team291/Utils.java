@@ -13,6 +13,7 @@ public class Utils {
         DEN,
         AOI_CONFIRMED,
         RALLY_LOCATION,
+        TURRET_TARGET,
     }
 
     public static Direction getRandomDirection() {
@@ -121,10 +122,10 @@ public class Utils {
      *
      * broadcast - should i broadcast the enemies location as a temporary goal
      */
-    public static boolean shouldFlee(RobotController rc, RobotInfo[] enemyRobots, MapLocation loc) throws GameActionException {
+    public static boolean shouldFlee(RobotInfo[] enemyRobots, MapLocation loc) throws GameActionException {
         double distanceAfterMovingTowards;
         for (RobotInfo robot: enemyRobots) {
-            if (robot.team == RobotPlayer.myTeam || robot.team == Team.NEUTRAL || robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
+            if (robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
                 continue;
             }
 
@@ -144,13 +145,14 @@ public class Utils {
     }
 
     // wrapper for dirToLeastDamage that trys to make the move returns true if made the move
-    public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyRobots, MapLocation myLocation, Direction d) throws GameActionException {
-        return moveInDirToLeastDamage(nearbyRobots, myLocation, d, null);
+    public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyEnemies, MapLocation myLocation, Direction d) throws GameActionException {
+        return moveInDirToLeastDamage(nearbyEnemies, myLocation, d, null);
     }
 
-    public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyRobots, MapLocation myLocation, Direction d, ArrayDeque<MapLocation> seen) throws GameActionException {
+    public static boolean moveInDirToLeastDamage(RobotInfo[] nearbyEnemies, MapLocation myLocation, Direction d, ArrayDeque<MapLocation> seen) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
-        d = Utils.dirToLeastDamage(nearbyRobots, myLocation, d, seen);
+        d = Utils.dirToLeastDamage(nearbyEnemies, myLocation, d, seen);
+
         if (d != Direction.NONE) {
             rc.move(d);
             return true;
@@ -167,7 +169,7 @@ public class Utils {
         int minDamage = Integer.MAX_VALUE;
         Direction dirToMinDamage = Direction.NONE;
         int damageOnLoc;
-        boolean repeateLocation = false;
+        boolean repeateLocation;
 
         int offsetIndex = 0;
         int[] offsets = {0,1,-1,2,-2,3,-3,4};
@@ -198,10 +200,6 @@ public class Utils {
 
                 //iterate through each enemy bot
                 for (RobotInfo robot : enemyRobots) {
-                    if (robot.team == RobotPlayer.myTeam) {
-                        continue;
-                    }
-
                     if (robot.type == RobotType.TURRET) {
                         distanceAfterMovingTowards = desiredLoc.distanceSquaredTo(robot.location);
                     } else {
@@ -313,13 +311,13 @@ public class Utils {
         }
     }
 
-    public static MapLocation enemyAvgLoc(RobotInfo[] nearbyRobots, MapLocation myLocation) {
+    public static MapLocation enemyAvgLoc(RobotInfo[] enemyRobots, MapLocation myLocation) {
         int x = 0;
         int y = 0;
         int count = 0;
         MapLocation movetwrds;
-        for(RobotInfo robot: nearbyRobots) {
-            if (robot.team == RobotPlayer.myTeam || robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
+        for(RobotInfo robot: enemyRobots) {
+            if (robot.type == RobotType.ARCHON || robot.type == RobotType.SCOUT) {
                 continue;
             }
 
@@ -334,6 +332,30 @@ public class Utils {
         return new MapLocation(x/count, y/count);
     }
 
+    public static MapLocation getRallyLocation() {
+        RobotController rc = RobotPlayer.rc;
+
+        int sum;
+        int lowest = 9999999;
+        MapLocation[] archonLocs = rc.getInitialArchonLocations(RobotPlayer.myTeam);
+        MapLocation rallyPoint = archonLocs[0];
+
+        for (MapLocation m1 : archonLocs) {
+            sum = 0;
+            for (MapLocation m2 : archonLocs) {
+                if (!m1.equals(m2)) {
+                    sum += m1.distanceSquaredTo(m2); // add distance to other signal
+                }
+            }
+
+            if (sum < lowest) {
+                rallyPoint = m1;
+                lowest = sum;
+            }
+        }
+
+        return rallyPoint;
+    }
 
     public static int getLeft(int field) {
         return field >> 16; // sign bit is significant
@@ -349,6 +371,13 @@ public class Utils {
 
     public static MapLocation deserializeMapLocation(int i) {
      return new MapLocation(getLeft(i), getRight(i));
+    }
+
+    public static RobotInfo[] concatRobotLists(RobotInfo[] array1, RobotInfo[] array2) {
+        RobotInfo[] array1and2 = new RobotInfo[array1.length + array2.length];
+        System.arraycopy(array1, 0, array1and2, 0, array1.length);
+        System.arraycopy(array2, 0, array1and2, array1.length, array2.length);
+        return array1and2;
     }
 
     public static int directionToInt(Direction d) throws GameActionException {
