@@ -120,6 +120,13 @@ public class ARCHON {
             if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint), null)) {
                 seen.add(myLocation);
                 if (seen.size() > 5) seen.pop();
+                return;
+            }
+            for (Direction d: RobotPlayer.directions) {
+                if (rc.senseRobotAtLocation(myLocation.add(d)) != null && rc.onTheMap(myLocation.add(d))) {
+                    Utils.moveThrough(myLocation, d);
+                    return;
+                }
             }
         }
     }
