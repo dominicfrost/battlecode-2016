@@ -94,7 +94,7 @@ public class GUARD {
         int offsetIndex = 0;
         int[] offsets = {0,1,-1,2,-2,-3,3,4};
         int dirint = Utils.directionToInt(Direction.NORTH);
-        while (offsetIndex < 5 && (rc.senseRubble(myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8])) >= 50)) {
+        while (offsetIndex < 7 && (rc.senseRubble(myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8])) <= 50)) {
             offsetIndex++;
         }
         if (offsetIndex < 5) {
@@ -106,7 +106,7 @@ public class GUARD {
     }
 
     public static boolean patrolPerimeter() throws GameActionException {
-        return Utils.tryMoveWithinPerimeter(rallyPoint, Utils.getRandomDirection());
+        return Utils.tryMoveWithinPerimeter(rallyPoint, Utils.getRandomDirection()) || Utils.tryMove(myLocation.directionTo(rallyPoint));
     }
 
     public static void execute() {
