@@ -37,7 +37,7 @@ public class GUARD {
         if (moveToRallySinceWeak()) return;
         if (attackSinceEnemiesNearby()) return;
         if (advanceSinceEnemiesSensed()) return;
-//        if (clearNearbyRubble()) return;
+        if (clearNearbyRubble()) return;
         // TODO: move towards distress call
         patrolPerimeter();
     }
@@ -88,10 +88,22 @@ public class GUARD {
         return false;
     }
 
-//    public static boolean clearNearbyRubble() throws GameActionException {
-////        if (rc.senseRubble())
-//        return false;
-//    }
+    public static boolean clearNearbyRubble() throws GameActionException {
+        RobotController rc = RobotPlayer.rc;
+
+        int offsetIndex = 0;
+        int[] offsets = {0,1,-1,2,-2,-3,3,4};
+        int dirint = Utils.directionToInt(Direction.NORTH);
+        while (offsetIndex < 5 && (rc.senseRubble(myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8])) >= 50)) {
+            offsetIndex++;
+        }
+        if (offsetIndex < 5) {
+            rc.clearRubble(RobotPlayer.directions[(dirint + offsets[offsetIndex] + 8) % 8]);
+            return true;
+        }
+
+        return false;
+    }
 
     public static boolean patrolPerimeter() throws GameActionException {
         return Utils.tryMoveWithinPerimeter(rallyPoint, Utils.getRandomDirection());
