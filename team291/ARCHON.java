@@ -51,9 +51,9 @@ public class ARCHON {
                 if (isCoreReady) {
                     if (shouldFlee()) return;
                     if (spawn()) return;
+                    if (moveToParts()) return;
                     if (repair()) return;
                     if (activate()) return;
-                    if (moveToParts()) return;
                 }
                 chill();
                 break;
@@ -113,7 +113,12 @@ public class ARCHON {
         if (isCoreReady) {
             if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint), seen)) {
                 seen.add(myLocation);
-                if (seen.size() > 20) seen.pop();
+                if (seen.size() > 5) seen.pop();
+                return;
+            }
+            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint), null)) {
+                seen.add(myLocation);
+                if (seen.size() > 5) seen.pop();
             }
         }
     }
@@ -183,17 +188,11 @@ public class ARCHON {
     }
 
     public static boolean moveToParts() throws GameActionException {
-        MapLocation[] sightRange = Utils.getSensableLocations(myLocation);
-        for (MapLocation m: sightRange) {
-            if (m == null) {
-                return false;
-            }
-            if (isCoreReady && rc.senseParts(m) != 0 && rc.senseRubble(m) < 50) {
-                Direction d = Bug.startBuggin(rallyPoint, myLocation, 0);
-                if (d != Direction.NONE && d != Direction.OMNI) {
-                    rc.move(d);
-                    return true;
-                }
+        MapLocation adj;
+        for (Direction d: RobotPlayer.directions) {
+            adj = myLocation.add(d);
+            if (rc.canMove(d) && rc.senseParts(adj) != 0 && rc.senseRubble(adj) < 100) {
+                if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, d)) return true;
             }
         }
 

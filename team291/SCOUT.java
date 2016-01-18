@@ -29,7 +29,6 @@ public class SCOUT {
     public static enum ScoutState {
         NONE,
         SEARCHING_FOR_AOI,
-        RESETTING_SEARCH_DIRECTION,
         REPORTING_AOI
     }
 
