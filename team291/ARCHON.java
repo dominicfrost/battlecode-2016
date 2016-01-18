@@ -67,6 +67,7 @@ public class ARCHON {
                         return;
                     }
                     if (activate()) return;
+                    if (moveToParts()) return;
                     if (repair()) return;
                 }
 
@@ -76,8 +77,8 @@ public class ARCHON {
                 if (isCoreReady) {
                     if (shouldFlee()) return;
                     if (activate()) return;
-                    if (repair()) return;
                     if (moveToParts()) return;
+                    if (repair()) return;
                 }
 
                 returnToRally();
