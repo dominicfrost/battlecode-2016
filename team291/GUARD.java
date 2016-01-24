@@ -2,6 +2,8 @@ package team291;
 
 import battlecode.common.*;
 
+import java.awt.*;
+
 public class GUARD {
 
     static RobotController rc;
@@ -25,16 +27,15 @@ public class GUARD {
         hostileRobots = rc.senseHostileRobots(rc.getLocation(), RobotPlayer.rt.sensorRadiusSquared);
         hostileRobotsInAttackRange = rc.senseHostileRobots(rc.getLocation(), RobotPlayer.rt.attackRadiusSquared);
 
-        if (state != GuardStates.HURT && rc.getHealth() < RobotPlayer.rt.maxHealth / 4) {
+        if (state != GuardStates.HURT && rc.isInfected() && rc.getHealth() < RobotPlayer.rt.maxHealth / 4) {
             state = GuardStates.HURT;
-        } else if (state != GuardStates.AGGRO && rc.getHealth() == RobotPlayer.rt.maxHealth){
+        } else if (state != GuardStates.AGGRO && (!rc.isInfected() || rc.getHealth() == RobotPlayer.rt.maxHealth)){
             state = GuardStates.AGGRO;
         }
 
 //        Utils.getDistressSignal();
 
         // TODO: Clear that debris
-
         if (fleeSinceWeekAndEnemiesNearby()) return;
         if (moveToRallySinceWeak()) return;
         if (attackSinceEnemiesNearby()) return;
@@ -96,9 +97,12 @@ public class GUARD {
         int offsetIndex = 0;
         int[] offsets = {0,1,-1,2,-2,-3,3,4};
         int dirint = Utils.directionToInt(Direction.NORTH);
+        double distToRally;
+        MapLocation potential;
         while (offsetIndex < 7 ) {//&& (rc.senseRubble() <= 50)) {
-            MapLocation potential = myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8]);
-            if (rc.onTheMap(potential) && potential.distanceSquaredTo(rallyPoint) > Utils.distanceSquaredToPerimeter() && rc.senseRubble(potential) <= 200) break;
+            potential = myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8]);
+            distToRally = potential.distanceSquaredTo(rallyPoint);
+            if (rc.onTheMap(potential) && distToRally > Utils.distanceSquaredToPerimeter() && distToRally - Utils.distanceSquaredToPerimeter() < 2 && rc.senseRubble(potential) <= 200) break;
             offsetIndex++;
         }
         if (offsetIndex < 5) {

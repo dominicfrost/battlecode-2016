@@ -36,7 +36,7 @@ public class Circle {
     private boolean reverse(MapLocation next) throws GameActionException {
         // if the next spot is off the map or occupied by another of my type reverse my direction
         RobotInfo botAtNext = rc.senseRobotAtLocation(next);
-        if (!rc.onTheMap(next) || (botAtNext != null && botAtNext.type == RobotPlayer.rt)) {
+        if (!rc.onTheMap(next) || (botAtNext != null && botAtNext.team == RobotPlayer.myTeam)) {
             circlingDir = RobotPlayer.directions[circlingDir].opposite().ordinal();
             circlingCW = !circlingCW;
             return true;
@@ -52,7 +52,9 @@ public class Circle {
         int reverseDir = circlingCW ? (circlingDir - 1 + 8) % 8 : (circlingDir + 1) % 8;
         MapLocation next = myLocation.add(RobotPlayer.directions[reverseDir]);
         if (next.distanceSquaredTo(rallyPoint) <= circleRadius) {
-            if (!this.reverse(next)) {
+            if (!rc.onTheMap(next))  {
+                circlingDir = getRandomCirclingDir();
+            } else if (!this.reverse(next)) {
                 return rc.isCoreReady() && Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, RobotPlayer.directions[reverseDir]);
             }
         }

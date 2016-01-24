@@ -22,7 +22,7 @@ public class Utils {
     // Returns an int that will be the perimeter of the distanceSquared to the rally Point
     public static int distanceSquaredToPerimeter() throws GameActionException {
         int numRobots = RobotPlayer.rc.getRobotCount();
-        int weight = 6;
+        int weight = 2;
 
         return Math.round((float) (numRobots * weight / Math.PI));
 

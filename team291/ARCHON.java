@@ -162,13 +162,13 @@ public class ARCHON {
 //                 return false;
 //            }
 
-//            if (spawnFate < 95) {
-//                 if (spawnGuard()) {
-//                     spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-//                     return true;
-//                 }
-//                 return false;
-//            }
+            if (spawnFate < 95) {
+                 if (spawnGuard()) {
+                     spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+                     return true;
+                 }
+                 return false;
+            }
 
             if (spawnFate < 100) {
                  if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
