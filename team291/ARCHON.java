@@ -32,7 +32,7 @@ public class ARCHON {
     }
 
     public static void doTurn() throws GameActionException {
-        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("Q");
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("Q " + Clock.getBytecodesLeft());
 
         isCoreReady = rc.isCoreReady();
         if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("V");
@@ -364,10 +364,10 @@ public class ARCHON {
         rc = RobotPlayer.rc;
         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
         while (true) {
-            if (RobotPlayer.id == 3760) System.out.println(rc.getRoundNum());
+            if (RobotPlayer.id == 3760) System.out.println(rc.getRoundNum() + " " + + Clock.getBytecodesLeft());
 
             try {
-                if (RobotPlayer.id == 3760) System.out.println("WIT" + rc.getRoundNum());
+                if (RobotPlayer.id == 3760) System.out.println("WIT" + rc.getRoundNum() + " " + Clock.getBytecodesLeft());
 
                 doTurn();
             } catch (Exception e) {
