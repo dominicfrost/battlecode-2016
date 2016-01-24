@@ -4,21 +4,38 @@ import battlecode.common.*;
 
 public class TTM {
 
-    public static void doTurn(RobotController rc) throws GameActionException {
+    public static RobotController rc;
+    public static MapLocation goal, rallyPoint, myLocation;
 
+
+    public static boolean doTurn() throws GameActionException {
+        myLocation = rc.getLocation();
+        goal = Utils.findBetterLocation(myLocation, rallyPoint);
+        if (goal != null) {
+            Direction dirToGoal = myLocation.directionTo(goal);
+            if (rc.canMove(dirToGoal)) {
+                if (!rc.isCoreReady()) return false;
+                rc.move(dirToGoal);
+            }
+        }
+        rc.unpack();
+        return true;
     }
 
-    public static void execute(RobotController rc) {
+    public static void execute() {
+        rc = RobotPlayer.rc;
+        rallyPoint = Utils.getRallyLocation();
         while (true) {
             try {
-                if (rc.isCoreReady()) {
-                    doTurn(rc);
-                }
-                Clock.yield();
+                if (doTurn()) break;
+                rc.emptySignalQueue();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
             }
+            Clock.yield();
         }
+        Clock.yield();
+        TURRET.execute();
     }
 }

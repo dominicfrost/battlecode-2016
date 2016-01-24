@@ -9,15 +9,18 @@ public class TURRET {
     public static RobotInfo[] nearbyEnemies;
     public static MapLocation myLocation;
     public static ArrayDeque<Signal> signals;
+    public static MapLocation rallyPoint;
 
-    public static void doTurn() throws GameActionException {
+    public static boolean doTurn() throws GameActionException {
         myLocation = rc.getLocation();
         nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
 
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
 
-        if (attackTurretLocations()) return;
-        if (attackAnythingClose()) return;
+        if (attackTurretLocations()) return false;
+        if (attackAnythingClose()) return false;
+        if (findBetterLocation()) return true;
+        return false;
     }
 
     public static boolean attackTurretLocations() throws GameActionException {
@@ -45,20 +48,33 @@ public class TURRET {
         return false;
     }
 
+    public static boolean findBetterLocation() throws GameActionException {
+        MapLocation toMove = Utils.findBetterLocation(myLocation, rallyPoint);
+        if (toMove != null) {
+          rc.pack();
+          return true;
+        }
+
+        return false;
+    }
+
     public static void execute() {
         rc = RobotPlayer.rc;
+        rallyPoint = Utils.getRallyLocation();
         while (true) {
             try {
                 if (rc.isCoreReady()) {
-                    doTurn();
+                    if (doTurn()) break;
                 } else {
                     rc.emptySignalQueue();
                 }
-                Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
             }
+            Clock.yield();
         }
+        Clock.yield();
+        TTM.execute();
     }
 }

@@ -81,11 +81,11 @@ public class SOLDIER {
                 } else {
                     rc.emptySignalQueue();
                 }
-                Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
             }
+            Clock.yield();
         }
     }
 }

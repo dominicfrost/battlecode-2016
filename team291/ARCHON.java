@@ -122,7 +122,7 @@ public class ARCHON {
                 if (seen.size() > 5) seen.pop();
                 return;
             }
-            for (Direction d: RobotPlayer.directions) {
+            for (Direction d : RobotPlayer.directions) {
                 if (rc.senseRobotAtLocation(myLocation.add(d)) != null && rc.onTheMap(myLocation.add(d))) {
                     Utils.moveThrough(myLocation, d);
                     return;
@@ -135,7 +135,7 @@ public class ARCHON {
         double lowestHealth = 1001;
         MapLocation lowestHealthLocation = null;
 
-        for (RobotInfo r: nearbyAllies) {
+        for (RobotInfo r : nearbyAllies) {
             if (myLocation.distanceSquaredTo(r.location) <= RobotPlayer.rt.attackRadiusSquared && r.health < lowestHealth && r.type != RobotType.ARCHON && r.health != r.type.maxHealth) {
                 lowestHealthLocation = r.location;
                 lowestHealth = r.health;
@@ -153,30 +153,31 @@ public class ARCHON {
 
     public static boolean spawn() throws GameActionException {
         if (rc.hasBuildRequirements(RobotType.TURRET)) {
-            if (spawnFate < 50) {
-                if (spawnTurret()) {
-                    spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-                    return true;
-                }
-                return false;
-            }
-
-            if (spawnFate < 95) {
-                if (spawnGuard()) {
-                    spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-                    return true;
-                }
-                return false;
-            }
-
-            if (spawnFate < 100) {
-                if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
-                    spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-                    return true;
-                }
-                return false;
-
-            }
+            return (spawnTurret());
+            // if (spawnFate < 50) {
+            //     if (spawnTurret()) {
+            //         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+            //         return true;
+            //     }
+            //     return false;
+            // }
+            //
+            // if (spawnFate < 95) {
+            //     if (spawnGuard()) {
+            //         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+            //         return true;
+            //     }
+            //     return false;
+            // }
+            //
+            // if (spawnFate < 100) {
+            //     if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
+            //         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+            //         return true;
+            //     }
+            //     return false;
+            //
+            // }
         }
 
         return false;
@@ -184,20 +185,21 @@ public class ARCHON {
 
     public static boolean activate() throws GameActionException {
         RobotInfo[] neutrals = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, Team.NEUTRAL);
-        for (RobotInfo r: neutrals) {
+        for (RobotInfo r : neutrals) {
             if (r.location.distanceSquaredTo(myLocation) < 2) {
                 rc.activate(r.location);
                 //System.out.println("activate");
                 return true;
             }
-            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(r.location))) return true;
+            if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(r.location)))
+                return true;
         }
         return false;
     }
 
     public static boolean moveToParts() throws GameActionException {
         MapLocation adj;
-        for (Direction d: RobotPlayer.directions) {
+        for (Direction d : RobotPlayer.directions) {
             adj = myLocation.add(d);
             if (rc.canMove(d) && rc.senseParts(adj) != 0 && rc.senseRubble(adj) < 100) {
                 if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, d)) return true;
@@ -240,7 +242,7 @@ public class ARCHON {
                 msg = s.getMessage();
                 if (msg[0] == Utils.MessageType.PART_LOCATION.ordinal() || msg[0] == Utils.MessageType.NEUTRAL_ROBOT_LOCATION.ordinal()) {
                     int signalId = s.getID();
-                    for (Signal s2: signals) {
+                    for (Signal s2 : signals) {
                         if (s2.getMessage()[0] == Utils.MessageType.AOI_CONFIRMED.ordinal() && s2.getMessage()[1] == signalId) {
                             continue ogLoop;
                         }
@@ -290,18 +292,35 @@ public class ARCHON {
     public static boolean spawnTurret() throws GameActionException {
         // don't need to check core because this should only be called from spawn!
         MapLocation potentialSpawnPoint;
-        for (Direction d: RobotPlayer.directions) {
+        double minDistToRally = 9999999;
+        double distToRally;
+        Direction toSpawn = Direction.NONE;
+
+        for (Direction d : RobotPlayer.directions) {
             potentialSpawnPoint = myLocation.add(d);
-            if (((potentialSpawnPoint.x + potentialSpawnPoint.y) % 2) == 0 && rc.canBuild(d, RobotType.TURRET)) {
-                rc.build(d, RobotType.TURRET);
-                return true;
+            distToRally = potentialSpawnPoint.distanceSquaredTo(rallyPoint);
+            if (((potentialSpawnPoint.x + potentialSpawnPoint.y) % 2) == 0 && rc.canBuild(d, RobotType.TURRET) && minDistToRally > distToRally) {
+                minDistToRally = distToRally;
+                toSpawn = d;
             }
+        }
+
+        if (toSpawn != Direction.NONE) {
+            MapLocation better = Utils.findBetterLocation(myLocation.add(toSpawn), rallyPoint);
+            if (better != null) {
+                if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(better))) {
+                    return true;
+                }
+                rc.build(toSpawn, RobotType.TURRET);
+            }
+            rc.build(toSpawn, RobotType.TURRET);
+            return true;
         }
 
         return randomMove();
     }
 
-    public static boolean spawnGuard() throws GameActionException{
+    public static boolean spawnGuard() throws GameActionException {
         if (!trySpawn(Direction.NORTH, RobotType.GUARD)) {
             return false;
         }
@@ -329,17 +348,16 @@ public class ARCHON {
 
 
     public static void execute() {
-        rc =  RobotPlayer.rc;
+        rc = RobotPlayer.rc;
         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
         while (true) {
             try {
                 doTurn();
-                Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
-                Clock.yield();
             }
+            Clock.yield();
         }
     }
 }

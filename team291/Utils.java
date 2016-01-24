@@ -357,6 +357,23 @@ public class Utils {
         return rallyPoint;
     }
 
+    public static boolean shouldPutTurretOn(MapLocation myLocation, MapLocation rallyPoint, MapLocation potentialLoc) throws GameActionException {
+      RobotController rc = RobotPlayer.rc;
+      return ((potentialLoc.x + potentialLoc.y) % 2) == 0 && !rc.isLocationOccupied(potentialLoc) && rc.onTheMap(potentialLoc) && rc.senseRubble(potentialLoc) < 50 && potentialLoc.distanceSquaredTo(rallyPoint) < myLocation.distanceSquaredTo(rallyPoint);
+    }
+
+    public static MapLocation findBetterLocation(MapLocation initialLoc, MapLocation rallyPoint) throws GameActionException {
+        MapLocation potentialLoc;
+        for (Direction d: RobotPlayer.directions) {
+            potentialLoc = initialLoc.add(d);
+            if (shouldPutTurretOn(initialLoc, rallyPoint, potentialLoc)) {
+              return potentialLoc;
+            }
+        }
+
+        return null;
+    }
+
     public static int getLeft(int field) {
         return field >> 16; // sign bit is significant
     }

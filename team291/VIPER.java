@@ -4,21 +4,23 @@ import battlecode.common.*;
 
 public class VIPER {
 
-    public static void doTurn(RobotController rc) throws GameActionException {
-
+    public static RobotController rc;
+    public static void doTurn() throws GameActionException {
+        rc.disintegrate();
     }
 
-    public static void execute(RobotController rc) {
+    public static void execute() {
+        rc = RobotPlayer.rc;
         while (true) {
             try {
                 if (rc.isCoreReady()) {
-                    doTurn(rc);
+                    doTurn();
                 }
-                Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
             }
+            Clock.yield();
         }
     }
 }

@@ -129,11 +129,11 @@ public class GUARD {
                 } else {
                     // do shit that doesn't need core delay stuff
                 }
-                Clock.yield();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
             }
+            Clock.yield();
         }
     }
 }

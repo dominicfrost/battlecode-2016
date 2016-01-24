@@ -47,19 +47,19 @@ public class RobotPlayer {
                 SCOUT.execute();
                 break;
             case VIPER:
-                VIPER.execute(rc);
+                VIPER.execute();
                 break;
             case ARCHON:
                 ARCHON.execute();
                 break;
             case SOLDIER:
-                SOLDIER.execute();
+                GUARD.execute();
                 break;
             case TURRET:
                 TURRET.execute();
                 break;
             case TTM:
-                TTM.execute(rc);
+                TTM.execute();
                 break;
             case GUARD:
                 GUARD.execute();
