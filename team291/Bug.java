@@ -36,16 +36,12 @@ public class Bug {
         //im at the goal yo!
         if(myLocation.distanceSquaredTo(goal) <= quitThresh) {
             state = BugState.AT_GOAL;
-            if (RobotPlayer.id == 3760) System.out.println( "A");
-
             return Direction.OMNI;
         }
 
         //if we are back at where we started on the wall
         if (wallStartLocation != null && myLocation.equals(wallStartLocation)){
             freshstart();
-            if (RobotPlayer.id == 3760) System.out.println( "B");
-
             return Direction.OMNI;
         }
 
@@ -54,8 +50,6 @@ public class Bug {
         //if its omni we are following the map bounds so restart
         if (dirToMove == Direction.OMNI) {
             freshstart();
-            if (RobotPlayer.id == 3760) System.out.println( "C");
-
             return dirToMove;
         }
 
@@ -66,7 +60,6 @@ public class Bug {
         }
 
         myDirection = dirToMove;
-        if (RobotPlayer.id == 3760) System.out.println( "MOVING  " + dirToMove.toString());
         return dirToMove;
     }
 
@@ -97,7 +90,7 @@ public class Bug {
         int myLocationIndex = currentMLine.indexOf(myLocation);
         //get the next location on the mLine and try to move there
         MapLocation nextLocation = currentMLine.get(myLocationIndex + 1);
-//        if (rc.isLocationOccupied(nextLocation)) return Direction.NONE;
+        if (rc.isLocationOccupied(nextLocation)) return Direction.NONE;
 
         Direction nextLocationDir = myLocation.directionTo(nextLocation);
         myDirection = nextLocationDir;
@@ -116,18 +109,16 @@ public class Bug {
             leftDir = leftDir.rotateLeft();
 
             if (rc.canMove(rightDir)) {
-//                Util.debug(rc, "ON WALL RIGHT");
                 state = BugState.ON_WALL;
                 movedClockwise = true;
-                wallStartLocation = myLocation.add(rightDir);
+                wallStartLocation = myLocation;
                 return rightDir;
             }
 
             if (rc.canMove(leftDir)) {
-//                Util.debug(rc, "ON WALL LFET");
                 state = BugState.ON_WALL;
                 movedClockwise = false;
-                wallStartLocation = myLocation.add(rightDir);
+                wallStartLocation = myLocation;
                 return leftDir;
             }
         }
@@ -136,7 +127,6 @@ public class Bug {
     public static Direction followWall() throws GameActionException {
         //if we can get back on the mline do it
         if (currentMLine.contains(myLocation.add(myDirection)) && rc.canMove(myDirection)) {
-//            Util.debug(rc, "BACK ON MLINE");
             state = BugState.ON_MLINE;
             return myDirection;
         }
@@ -176,13 +166,11 @@ public class Bug {
         Direction dirToGoal;
         ArrayList<MapLocation> mLine = new ArrayList<>();// change to array??
         MapLocation currentLocation = myLocation;
-        if (RobotPlayer.id == 3760) System.out.println("calcmline " + rc.getRoundNum());
         while (!currentLocation.equals(goal)) {
             mLine.add(currentLocation);
             dirToGoal = currentLocation.directionTo(goal);
             currentLocation = currentLocation.add(dirToGoal);
         }
-        if (RobotPlayer.id == 3760) System.out.println("calcmlineDone " + rc.getRoundNum());
 
         mLine.add(goal);
         currentMLine = mLine;
