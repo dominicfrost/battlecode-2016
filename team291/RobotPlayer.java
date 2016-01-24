@@ -39,7 +39,6 @@ public class RobotPlayer {
         enemyTeam = myTeam.opponent();
         rt = rc.getType();
         maxSignalRange = rt.sensorRadiusSquared;// * 2 - 1;
-//        rc.emptySignalQueue();
 
 
         switch (rt) {

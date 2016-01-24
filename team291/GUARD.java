@@ -9,6 +9,8 @@ public class GUARD {
     static RobotInfo[] hostileRobots;
     static RobotInfo[] hostileRobotsInAttackRange;
 
+    public static Circle circler;
+
     private static MapLocation rallyPoint;
 
     private static GuardStates state = GuardStates.AGGRO;
@@ -94,7 +96,9 @@ public class GUARD {
         int offsetIndex = 0;
         int[] offsets = {0,1,-1,2,-2,-3,3,4};
         int dirint = Utils.directionToInt(Direction.NORTH);
-        while (offsetIndex < 7 && (rc.senseRubble(myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8])) <= 50)) {
+        while (offsetIndex < 7 ) {//&& (rc.senseRubble() <= 50)) {
+            MapLocation potential = myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8]);
+            if (rc.onTheMap(potential) && potential.distanceSquaredTo(rallyPoint) > Utils.distanceSquaredToPerimeter() && rc.senseRubble(potential) <= 200) break;
             offsetIndex++;
         }
         if (offsetIndex < 5) {
@@ -106,7 +110,8 @@ public class GUARD {
     }
 
     public static boolean patrolPerimeter() throws GameActionException {
-        return Utils.tryMoveWithinPerimeter(rallyPoint, Utils.getRandomDirection()) || Utils.tryMove(myLocation.directionTo(rallyPoint));
+        circler.setCircleRadius(Utils.distanceSquaredToPerimeter());
+        return circler.circle(hostileRobots, myLocation);
     }
 
     public static void execute() {
@@ -121,7 +126,7 @@ public class GUARD {
 //        }
         rallyPoint = Utils.getRallyLocation();
 
-
+        circler = new Circle(rallyPoint, RobotPlayer.rt.sensorRadiusSquared);
         while (true) {
             try {
                 if (rc.isCoreReady()) {

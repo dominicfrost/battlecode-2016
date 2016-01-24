@@ -153,32 +153,31 @@ public class ARCHON {
     }
 
     public static boolean spawn() throws GameActionException {
-        if (rc.hasBuildRequirements(RobotType.SCOUT)) {
-            return (trySpawn(Direction.NORTH, RobotType.SCOUT));
-            // if (spawnFate < 50) {
-            //     if (spawnTurret()) {
-            //         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-            //         return true;
-            //     }
-            //     return false;
-            // }
-            //
-            // if (spawnFate < 95) {
-            //     if (spawnGuard()) {
-            //         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-            //         return true;
-            //     }
-            //     return false;
-            // }
-            //
-            // if (spawnFate < 100) {
-            //     if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
-            //         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-            //         return true;
-            //     }
-            //     return false;
-            //
-            // }
+        if (rc.hasBuildRequirements(RobotType.TURRET)) {
+//            if (spawnFate < 50) {
+//                 if (spawnTurret()) {
+//                     spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+//                     return true;
+//                 }
+//                 return false;
+//            }
+
+//            if (spawnFate < 95) {
+//                 if (spawnGuard()) {
+//                     spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+//                     return true;
+//                 }
+//                 return false;
+//            }
+
+            if (spawnFate < 100) {
+                 if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
+                     spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+                     return true;
+                 }
+                 return false;
+
+            }
         }
 
         return false;
@@ -238,7 +237,6 @@ public class ARCHON {
         if (!rc.hasBuildRequirements(RobotType.TURRET)) {
             int[] msg;
 
-            ogLoop:
             for (Signal s : signals) {
                 msg = s.getMessage();
                 if (msg[0] == Utils.MessageType.PART_LOCATION.ordinal() || msg[0] == Utils.MessageType.NEUTRAL_ROBOT_LOCATION.ordinal()) {
