@@ -247,7 +247,7 @@ public class ARCHON {
                 }
             }
 
-            if (isCoreReady && myLocation.distanceSquaredTo(rallyPoint) > 9) {
+            if (isCoreReady && myLocation.distanceSquaredTo(rallyPoint) > 2) {
                 Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
             }
         }
