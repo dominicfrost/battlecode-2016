@@ -2,7 +2,6 @@ package team291;
 
 import battlecode.common.*;
 
-import java.awt.*;
 import java.util.ArrayDeque;
 
 public class Utils {
@@ -371,6 +370,17 @@ public class Utils {
         }
 
         return null;
+    }
+
+    public static boolean isSurrounded(MapLocation m) {
+        RobotController rc = RobotPlayer.rc;
+        for (Direction d: RobotPlayer.directions) {
+            if (rc.senseRubble(m.add(d)) < 50) {
+                return false;
+            }
+        }
+
+        return  true;
     }
 
     public static int getLeft(int field) {

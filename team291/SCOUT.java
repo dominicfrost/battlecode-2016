@@ -33,16 +33,13 @@ public class SCOUT {
     private static void doTurn() throws GameActionException {
         isCoreReady = rc.isCoreReady();
         myLocation = rc.getLocation();
-
         nearbyAllies = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam);
         nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
-
         signals = rc.emptySignalQueue();
         scoutSignals = Utils.getScoutSignals(signals);
 
         switch (state) {
             case NONE:
-//                circlingDir = getRandomCirclingDir();
                 rallyPoint = Utils.getRallyLocation();
                 state = ScoutState.SEARCHING_FOR_AOI;
                 circler = new Circle(rallyPoint, RobotPlayer.rt.sensorRadiusSquared);
@@ -106,7 +103,8 @@ public class SCOUT {
 
         MapLocation[] partLocations = rc.sensePartLocations(RobotPlayer.rt.sensorRadiusSquared);
         for (MapLocation m : partLocations) {
-            if (rc.senseRubble(m) < 100) {
+            if (rc.senseRubble(m) < 100 && !Utils.isSurrounded(m)) {
+                System.out.println("PARTSb");
                 broadcastLandMark = Utils.MessageType.PART_LOCATION;
                 goal = m;
                 rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
@@ -121,12 +119,16 @@ public class SCOUT {
         RobotInfo[] neutrals = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, Team.NEUTRAL);
         if (neutrals.length > 0) {
             broadcastLandMark = Utils.MessageType.NEUTRAL_ROBOT_LOCATION;
-            goal = neutrals[0].location;
-            rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
-            broadcastCount++;
-            if (broadcastCount == 20) {
-                circle();
-                return;
+            for (RobotInfo neutral: neutrals) {
+                if (!Utils.isSurrounded(neutral.location)) {
+                    goal = neutral.location;
+                    rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
+                    broadcastCount++;
+                    if (broadcastCount == 20) {
+                        circle();
+                        return;
+                    }
+                }
             }
         }
 
@@ -134,12 +136,14 @@ public class SCOUT {
     }
 
     public static boolean circle() throws GameActionException {
+        circler.setCircleRadius(Utils.distanceSquaredToPerimeter() + 2);
         return circler.circle(nearbyEnemies, myLocation);
     }
 
 
     public static void execute() {
         rc = RobotPlayer.rc;
+        System.out.println("HIer");
         while (true) {
             try {
                 doTurn();

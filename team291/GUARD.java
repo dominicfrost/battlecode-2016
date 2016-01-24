@@ -2,7 +2,8 @@ package team291;
 
 import battlecode.common.*;
 
-import java.awt.*;
+import java.util.ArrayDeque;
+
 
 public class GUARD {
 
@@ -40,6 +41,7 @@ public class GUARD {
         if (moveToRallySinceWeak()) return;
         if (attackSinceEnemiesNearby()) return;
         if (advanceSinceEnemiesSensed()) return;
+        if (moveToAOI()) return;
         if (clearNearbyRubble()) return;
         // TODO: move towards distress call
         patrolPerimeter();
@@ -118,6 +120,30 @@ public class GUARD {
         return circler.circle(hostileRobots, myLocation);
     }
 
+    public static boolean moveToAOI() throws GameActionException {
+        ArrayDeque<Signal> scoutSignals = Utils.getScoutSignals(rc.emptySignalQueue());
+        int[] msg;
+
+        double closestAOIDist = 999999;
+        MapLocation closestAOI = null;
+        double distToAOI;
+        MapLocation aoi;
+
+        for (Signal s: scoutSignals) {
+            msg = s.getMessage();
+            if (msg[0] == Utils.MessageType.DEN.ordinal()) {
+                aoi = Utils.deserializeMapLocation(msg[1]);
+                distToAOI = myLocation.distanceSquaredTo(aoi);
+                if (distToAOI < closestAOIDist) {
+                    closestAOIDist = distToAOI;
+                    closestAOI = aoi;
+                }
+            }
+        }
+
+        return closestAOI != null && Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(closestAOI));
+    }
+
     public static void execute() {
         rc = RobotPlayer.rc;
 
@@ -137,6 +163,7 @@ public class GUARD {
                     doTurn();
                 } else {
                     // do shit that doesn't need core delay stuff
+                    rc.emptySignalQueue();
                 }
             } catch (Exception e) {
                 System.out.println(e.getMessage());
