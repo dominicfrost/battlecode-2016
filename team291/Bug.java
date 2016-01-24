@@ -36,12 +36,16 @@ public class Bug {
         //im at the goal yo!
         if(myLocation.distanceSquaredTo(goal) <= quitThresh) {
             state = BugState.AT_GOAL;
+            if (RobotPlayer.id == 3760) System.out.println( "A");
+
             return Direction.OMNI;
         }
 
         //if we are back at where we started on the wall
         if (wallStartLocation != null && myLocation.equals(wallStartLocation)){
             freshstart();
+            if (RobotPlayer.id == 3760) System.out.println( "B");
+
             return Direction.OMNI;
         }
 
@@ -50,6 +54,8 @@ public class Bug {
         //if its omni we are following the map bounds so restart
         if (dirToMove == Direction.OMNI) {
             freshstart();
+            if (RobotPlayer.id == 3760) System.out.println( "C");
+
             return dirToMove;
         }
 
@@ -60,7 +66,7 @@ public class Bug {
         }
 
         myDirection = dirToMove;
-        //Util.debug(rc, "MOVING  " + dirToMove.toString());
+        if (RobotPlayer.id == 3760) System.out.println( "MOVING  " + dirToMove.toString());
         return dirToMove;
     }
 
@@ -82,7 +88,7 @@ public class Bug {
             case ON_WALL:
                 return followWall();
         }
-        //System.out.println("HERERERE??????WHY?????????");
+
         return Direction.OMNI;
     }
 
@@ -170,11 +176,14 @@ public class Bug {
         Direction dirToGoal;
         ArrayList<MapLocation> mLine = new ArrayList<>();// change to array??
         MapLocation currentLocation = myLocation;
+        if (RobotPlayer.id == 3760) System.out.println("calcmline " + rc.getRoundNum());
         while (!currentLocation.equals(goal)) {
             mLine.add(currentLocation);
             dirToGoal = currentLocation.directionTo(goal);
             currentLocation = currentLocation.add(dirToGoal);
         }
+        if (RobotPlayer.id == 3760) System.out.println("calcmlineDone " + rc.getRoundNum());
+
         mLine.add(goal);
         currentMLine = mLine;
     }

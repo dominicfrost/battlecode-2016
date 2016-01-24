@@ -104,7 +104,6 @@ public class SCOUT {
         MapLocation[] partLocations = rc.sensePartLocations(RobotPlayer.rt.sensorRadiusSquared);
         for (MapLocation m : partLocations) {
             if (rc.senseRubble(m) < 100 && !Utils.isSurrounded(m)) {
-                System.out.println("PARTSb");
                 broadcastLandMark = Utils.MessageType.PART_LOCATION;
                 goal = m;
                 rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
@@ -143,7 +142,6 @@ public class SCOUT {
 
     public static void execute() {
         rc = RobotPlayer.rc;
-        System.out.println("HIer");
         while (true) {
             try {
                 doTurn();

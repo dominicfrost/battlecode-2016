@@ -32,29 +32,38 @@ public class ARCHON {
     }
 
     public static void doTurn() throws GameActionException {
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("Q");
+
         isCoreReady = rc.isCoreReady();
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("V");
+
         myLocation = rc.getLocation();
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("A");
 
         nearbyAllies = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam);
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("B");
+
         nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("C");
+
 
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
-
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("STATE IS " + state + " round " + rc.getRoundNum());
         switch (state) {
             case NONE:
                 getRallyLocation();
                 break;
             case MOVING_TO_RALLY:
-                if (isCoreReady && shouldFlee()) return;
+                if (isCoreReady && shouldFlee()) break;
                 returnToRally();
                 break;
             case CHILLIN_AT_RALLY:
                 if (isCoreReady) {
-                    if (shouldFlee()) return;
-                    if (spawn()) return;
-                    if (moveToParts()) return;
-                    if (repair()) return;
-                    if (activate()) return;
+                    if (shouldFlee()) break;
+                    if (spawn()) break;
+                    if (moveToParts()) break;
+                    if (repair()) break;
+                    if (activate()) break;
                 }
                 chill();
                 break;
@@ -65,33 +74,34 @@ public class ARCHON {
                 if (isCoreReady) {
                     if (shouldFlee()) {
                         state = ArchonState.RETURING_TO_RALLY;
-                        return;
+                        break;
                     }
-                    if (activate()) return;
-                    if (moveToParts()) return;
-                    if (repair()) return;
+                    if (activate()) break;
+                    if (moveToParts()) break;
+                    if (repair()) break;
                 }
 
                 reportToAOI();
                 break;
             case RETURING_TO_RALLY:
                 if (isCoreReady) {
-                    if (shouldFlee()) return;
-                    if (activate()) return;
-                    if (moveToParts()) return;
-                    if (repair()) return;
+                    if (shouldFlee()) break;
+                    if (activate()) break;
+                    if (moveToParts()) break;
+                    if (repair()) break;
                 }
-
                 returnToRally();
                 break;
             case HIDING_FROM_THE_ZOMBIE_SPAWN_LIKE_A_BITCH:
                 if (isCoreReady) {
-                    if (shouldFlee()) return;
-                    if (repair()) return;
+                    if (shouldFlee()) break;
+                    if (repair()) break;
                     Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
                 }
                 break;
         }
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("OVER round " + rc.getRoundNum() + " " + Clock.getBytecodeNum() + " " + Clock.getBytecodesLeft());
+
     }
 
     public static boolean shouldFlee() throws GameActionException {
@@ -277,9 +287,11 @@ public class ARCHON {
             }
         }
 
+        if (RobotPlayer.id == 3760 && isCoreReady) System.out.println("MOVING TO " + aoi);
         if (isCoreReady) {
             Direction d = Bug.startBuggin(aoi, myLocation, 0);
             if (d != Direction.NONE && d != Direction.OMNI) {
+                if (RobotPlayer.id == 3760) System.out.println("BUG TO " + d);
                 rc.move(d);
             }
         }
@@ -352,7 +364,11 @@ public class ARCHON {
         rc = RobotPlayer.rc;
         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
         while (true) {
+            if (RobotPlayer.id == 3760) System.out.println(rc.getRoundNum());
+
             try {
+                if (RobotPlayer.id == 3760) System.out.println("WIT" + rc.getRoundNum());
+
                 doTurn();
             } catch (Exception e) {
                 System.out.println(e.getMessage());
