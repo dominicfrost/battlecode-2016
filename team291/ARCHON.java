@@ -15,6 +15,7 @@ public class ARCHON {
     private static ArchonState state = ArchonState.NONE;
     private static MapLocation rallyPoint;
     private static MapLocation aoi;
+    private static int aoiType;
 
     private static int spawnFate = -1;
 
@@ -152,8 +153,8 @@ public class ARCHON {
     }
 
     public static boolean spawn() throws GameActionException {
-        if (rc.hasBuildRequirements(RobotType.TURRET)) {
-            return (spawnTurret());
+        if (rc.hasBuildRequirements(RobotType.SCOUT)) {
+            return (trySpawn(Direction.NORTH, RobotType.SCOUT));
             // if (spawnFate < 50) {
             //     if (spawnTurret()) {
             //         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
@@ -241,16 +242,9 @@ public class ARCHON {
             for (Signal s : signals) {
                 msg = s.getMessage();
                 if (msg[0] == Utils.MessageType.PART_LOCATION.ordinal() || msg[0] == Utils.MessageType.NEUTRAL_ROBOT_LOCATION.ordinal()) {
-                    int signalId = s.getID();
-                    for (Signal s2 : signals) {
-                        if (s2.getMessage()[0] == Utils.MessageType.AOI_CONFIRMED.ordinal() && s2.getMessage()[1] == signalId) {
-                            continue ogLoop;
-                        }
-                    }
-
+                    aoiType = msg[0];
                     aoi = Utils.deserializeMapLocation(msg[1]);
                     state = ArchonState.REPORTING_TO_AOI;
-                    rc.broadcastMessageSignal(Utils.MessageType.AOI_CONFIRMED.ordinal(), signalId, RobotPlayer.maxSignalRange);
                     return;
                 }
             }
@@ -269,11 +263,20 @@ public class ARCHON {
             return;
         }
 
-        // if there is a bot at the location and im next to it go back
-        if (rc.canSenseLocation(aoi) && rc.senseRobotAtLocation(aoi) != null && myLocation.distanceSquaredTo(aoi) < 2) {
-            state = ArchonState.RETURING_TO_RALLY;
-            returnToRally();
-            return;
+        if (aoiType == Utils.MessageType.NEUTRAL_ROBOT_LOCATION.ordinal()) {
+            if (rc.canSenseLocation(aoi) && rc.senseRobotAtLocation(aoi) == null) {
+                state = ArchonState.RETURING_TO_RALLY;
+                returnToRally();
+                return;
+            }
+        }
+
+        if (aoiType == Utils.MessageType.PART_LOCATION.ordinal()) {
+            if (rc.canSenseLocation(aoi) && rc.senseParts(aoi) <= 0) {
+                state = ArchonState.RETURING_TO_RALLY;
+                returnToRally();
+                return;
+            }
         }
 
         if (isCoreReady) {
@@ -290,7 +293,7 @@ public class ARCHON {
     }
 
     public static boolean spawnTurret() throws GameActionException {
-        // don't need to check core because this should only be called from spawn!
+         // don't need to check core because this should only be called from spawn!
         MapLocation potentialSpawnPoint;
         double minDistToRally = 9999999;
         double distToRally;

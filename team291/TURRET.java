@@ -63,7 +63,7 @@ public class TURRET {
         rallyPoint = Utils.getRallyLocation();
         while (true) {
             try {
-                if (rc.isCoreReady()) {
+                if (rc.isCoreReady() && rc.isWeaponReady()) {
                     if (doTurn()) break;
                 } else {
                     rc.emptySignalQueue();

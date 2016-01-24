@@ -11,7 +11,6 @@ public class Utils {
         NEUTRAL_ROBOT_LOCATION,
         PART_LOCATION,
         DEN,
-        AOI_CONFIRMED,
         RALLY_LOCATION,
         TURRET_TARGET,
     }
