@@ -90,7 +90,7 @@ public class Bug {
         int myLocationIndex = currentMLine.indexOf(myLocation);
         //get the next location on the mLine and try to move there
         MapLocation nextLocation = currentMLine.get(myLocationIndex + 1);
-        if (rc.isLocationOccupied(nextLocation)) return Direction.NONE;
+        if (rc.isLocationOccupied(nextLocation)) return Direction.OMNI;
 
         Direction nextLocationDir = myLocation.directionTo(nextLocation);
         myDirection = nextLocationDir;
