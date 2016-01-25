@@ -104,7 +104,7 @@ public class GUARD {
         while (offsetIndex < 8 ) {//&& (rc.senseRubble() <= 50)) {
             potential = myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8]);
             distToRally = potential.distanceSquaredTo(rallyPoint);
-            if (rc.onTheMap(potential) && distToRally < Utils.distanceSquaredToPerimeter() + 2 && rc.senseRubble(potential) > 0) break;
+            if (rc.onTheMap(potential) && distToRally <= Utils.distanceSquaredToPerimeter() && rc.senseRubble(potential) > 0) break;
             offsetIndex++;
         }
         if (offsetIndex < 8) {

@@ -135,7 +135,7 @@ public class SCOUT {
     }
 
     public static boolean circle() throws GameActionException {
-        circler.setCircleRadius(Utils.distanceSquaredToPerimeter() + 2);
+        circler.setCircleRadius(Math.max(Utils.distanceSquaredToPerimeter() + 9, RobotPlayer.rt.sensorRadiusSquared));
         return circler.circle(nearbyEnemies, myLocation);
     }
 

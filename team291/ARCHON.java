@@ -193,7 +193,8 @@ public class ARCHON {
         for (Direction d : RobotPlayer.directions) {
             adj = myLocation.add(d);
             if (rc.canMove(d) && rc.senseParts(adj) != 0 && rc.senseRubble(adj) < 100) {
-                if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, d)) return true;
+                rc.move(d);
+                return true;
             }
         }
 
@@ -281,7 +282,6 @@ public class ARCHON {
                 state = ArchonState.RETURING_TO_RALLY;
                 returnToRally();
                 unreachableAOIs.add(aoi);
-                return;
             }
         }
     }
