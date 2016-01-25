@@ -131,7 +131,7 @@ public class GUARD {
 
         for (Signal s: scoutSignals) {
             msg = s.getMessage();
-            if (msg[0] == Utils.MessageType.DEN.ordinal()) {
+            if (msg[0] == Utils.MessageType.DEN.ordinal() || msg[0] == Utils.MessageType.ENEMY.ordinal()) {
                 aoi = Utils.deserializeMapLocation(msg[1]);
                 distToAOI = myLocation.distanceSquaredTo(aoi);
                 if (distToAOI < closestAOIDist) {
@@ -141,7 +141,7 @@ public class GUARD {
             }
         }
 
-        return closestAOI != null && Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(closestAOI));
+        return closestAOI != null && Utils.moveThrough(myLocation, myLocation.directionTo(closestAOI));
     }
 
     public static void execute() {

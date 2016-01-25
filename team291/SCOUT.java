@@ -46,7 +46,7 @@ public class SCOUT {
                 searchForAOIs();
                 break;
             case SEARCHING_FOR_AOI:
-                if (isCoreReady && flee()) return;
+                if (isCoreReady) flee();
                 searchForAOIs();
                 break;
         }
@@ -83,6 +83,19 @@ public class SCOUT {
                             }
                         }
                     }
+                }
+            }
+        }
+
+        for (RobotInfo r : nearbyEnemies) {
+            if (r.type != RobotType.ZOMBIEDEN) {
+                broadcastLandMark = Utils.MessageType.ENEMY;
+                goal = r.location;
+                rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
+                broadcastCount++;
+                if (broadcastCount == 20) {
+                    circle();
+                    return;
                 }
             }
         }

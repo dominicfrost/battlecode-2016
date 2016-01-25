@@ -323,10 +323,7 @@ public class ARCHON {
     }
 
     public static boolean spawnGuard() throws GameActionException {
-        if (!trySpawn(Direction.NORTH, RobotType.GUARD)) {
-            return false;
-        }
-        return true;
+        return trySpawn(Direction.NORTH, RobotType.GUARD);
     }
 
     // This method will attempt to spawn in the given direction (or as close to it as possible)

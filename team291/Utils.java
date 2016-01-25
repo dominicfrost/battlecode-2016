@@ -10,7 +10,7 @@ public class Utils {
         NEUTRAL_ROBOT_LOCATION,
         PART_LOCATION,
         DEN,
-        RALLY_LOCATION,
+        ENEMY,
         TURRET_TARGET,
     }
 
@@ -398,7 +398,6 @@ public class Utils {
     public static MapLocation deserializeMapLocation(int i) {
      return new MapLocation(getLeft(i), getRight(i));
     }
-
 
     public static int directionToInt(Direction d) throws GameActionException {
         switch(d) {
