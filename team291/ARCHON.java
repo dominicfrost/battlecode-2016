@@ -37,7 +37,6 @@ public class ARCHON {
         myLocation = rc.getLocation();
         nearbyAllies = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam);
         nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
-
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
         switch (state) {
             case NONE:
@@ -68,7 +67,6 @@ public class ARCHON {
                     }
                     if (activate()) break;
                     if (moveToParts()) break;
-                    if (repair()) break;
                 }
 
                 reportToAOI();
@@ -78,7 +76,6 @@ public class ARCHON {
                     if (shouldFlee()) break;
                     if (activate()) break;
                     if (moveToParts()) break;
-                    if (repair()) break;
                 }
                 returnToRally();
                 break;
@@ -274,7 +271,6 @@ public class ARCHON {
                 return;
             }
         }
-
         if (isCoreReady) {
             Direction d = Bug.startBuggin(aoi, myLocation, 0);
             if (d != Direction.NONE && d != Direction.OMNI) {
@@ -330,7 +326,6 @@ public class ARCHON {
         if (!trySpawn(Direction.NORTH, RobotType.GUARD)) {
             return false;
         }
-        rc.broadcastMessageSignal(Utils.MessageType.RALLY_LOCATION.ordinal(), Utils.serializeMapLocation(rallyPoint), RobotPlayer.rt.sensorRadiusSquared);
         return true;
     }
 
