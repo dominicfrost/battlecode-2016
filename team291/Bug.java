@@ -42,7 +42,7 @@ public class Bug {
         //if we are back at where we started on the wall
         if (wallStartLocation != null && myLocation.equals(wallStartLocation)){
             freshstart();
-            return Direction.OMNI;
+            return Direction.NONE;
         }
 
         Direction dirToMove = bugNextMove();

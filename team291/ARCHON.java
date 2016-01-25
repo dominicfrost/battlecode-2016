@@ -20,6 +20,7 @@ public class ARCHON {
     private static int spawnFate = -1;
 
     private static ArrayDeque<MapLocation> seen = new ArrayDeque<>();
+    private static ArrayDeque<MapLocation> unreachableAOIs = new ArrayDeque<>();
 
     public static enum ArchonState {
         NONE,
@@ -237,8 +238,10 @@ public class ARCHON {
                 if (msg[0] == Utils.MessageType.PART_LOCATION.ordinal() || msg[0] == Utils.MessageType.NEUTRAL_ROBOT_LOCATION.ordinal()) {
                     aoiType = msg[0];
                     aoi = Utils.deserializeMapLocation(msg[1]);
-                    state = ArchonState.REPORTING_TO_AOI;
-                    return;
+                    if (!unreachableAOIs.contains(aoi)) {
+                        state = ArchonState.REPORTING_TO_AOI;
+                        return;
+                    }
                 }
             }
 
@@ -278,6 +281,11 @@ public class ARCHON {
                 rc.move(d);
             } else if (d == Direction.OMNI) {
                 Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(aoi));
+            } else if (d == Direction.NONE) {
+                state = ArchonState.RETURING_TO_RALLY;
+                returnToRally();
+                unreachableAOIs.add(aoi);
+                return;
             }
         }
     }
