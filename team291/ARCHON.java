@@ -148,13 +148,13 @@ public class ARCHON {
 
     public static boolean spawn() throws GameActionException {
         if (rc.hasBuildRequirements(RobotType.TURRET)) {
-//            if (spawnFate < 50) {
-//                 if (spawnTurret()) {
-//                     spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-//                     return true;
-//                 }
-//                 return false;
-//            }
+            if (spawnFate < 60) {
+                 if (spawnTurret()) {
+                     spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+                     return true;
+                 }
+                 return false;
+            }
 
             if (spawnFate < 95) {
                  if (spawnGuard()) {

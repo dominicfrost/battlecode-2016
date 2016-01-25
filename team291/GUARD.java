@@ -101,13 +101,13 @@ public class GUARD {
         int dirint = Utils.directionToInt(Direction.NORTH);
         double distToRally;
         MapLocation potential;
-        while (offsetIndex < 7 ) {//&& (rc.senseRubble() <= 50)) {
+        while (offsetIndex < 8 ) {//&& (rc.senseRubble() <= 50)) {
             potential = myLocation.add(RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8]);
             distToRally = potential.distanceSquaredTo(rallyPoint);
-            if (rc.onTheMap(potential) && distToRally > Utils.distanceSquaredToPerimeter() && distToRally - Utils.distanceSquaredToPerimeter() < 2 && rc.senseRubble(potential) <= 200) break;
+            if (rc.onTheMap(potential) && distToRally < Utils.distanceSquaredToPerimeter() + 2 && rc.senseRubble(potential) > 0) break;
             offsetIndex++;
         }
-        if (offsetIndex < 5) {
+        if (offsetIndex < 8) {
             rc.clearRubble(RobotPlayer.directions[(dirint + offsets[offsetIndex] + 8) % 8]);
             return true;
         }

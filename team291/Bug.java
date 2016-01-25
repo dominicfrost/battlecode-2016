@@ -127,6 +127,7 @@ public class Bug {
     public static Direction followWall() throws GameActionException {
         //if we can get back on the mline do it
         if (currentMLine.contains(myLocation.add(myDirection)) && rc.canMove(myDirection)) {
+            wallStartLocation = null;
             state = BugState.ON_MLINE;
             return myDirection;
         }
