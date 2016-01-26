@@ -332,6 +332,10 @@ public class ARCHON {
         return randomMove();
     }
 
+    public static boolean spawnGuard() throws GameActionException {
+        return trySpawn(Direction.NORTH, RobotType.GUARD);
+    }
+
     public static boolean spawnSoldier() throws GameActionException {
         return trySpawn(Direction.NORTH, RobotType.SOLDIER);
     }
