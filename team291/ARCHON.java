@@ -199,12 +199,10 @@ public class ARCHON {
     }
 
     public static boolean activate() throws GameActionException {
-        RobotInfo[] neutrals = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, Team.NEUTRAL);
-        for (RobotInfo r : neutrals) {
-            if (r.location.distanceSquaredTo(myLocation) < 2) {
-                rc.activate(r.location);
-                return true;
-            }
+        RobotInfo[] neutrals = rc.senseNearbyRobots(2, Team.NEUTRAL);
+        if (neutrals.length > 0) {
+            rc.activate(neutrals[0].location);
+            return true;
         }
         return false;
     }
