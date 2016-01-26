@@ -126,18 +126,18 @@ public class ARCHON {
     }
 
     public static boolean repair() throws GameActionException {
-        double lowestHealth = 1001;
-        MapLocation lowestHealthLocation = null;
+        double highestHealth = 1;
+        MapLocation highestHealthLocation = null;
 
         for (RobotInfo r : nearbyAllies) {
-            if (myLocation.distanceSquaredTo(r.location) <= RobotPlayer.rt.attackRadiusSquared && r.health < lowestHealth && r.type != RobotType.ARCHON && r.health != r.type.maxHealth) {
-                lowestHealthLocation = r.location;
-                lowestHealth = r.health;
+            if (myLocation.distanceSquaredTo(r.location) <= RobotPlayer.rt.attackRadiusSquared && r.health > highestHealth && r.type != RobotType.ARCHON && r.health != r.type.maxHealth) {
+                highestHealthLocation = r.location;
+                highestHealth = r.health;
             }
         }
 
-        if (lowestHealthLocation != null) {
-            rc.repair(lowestHealthLocation);
+        if (highestHealthLocation != null) {
+            rc.repair(highestHealthLocation);
             return true;
         }
 
