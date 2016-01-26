@@ -170,7 +170,7 @@ public class ARCHON {
                  }
                  return false;
             } else {
-                 if (spawnGuard()) {
+                 if (spawnSoldier()) {
                      spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
                      return true;
                  }
@@ -332,8 +332,8 @@ public class ARCHON {
         return randomMove();
     }
 
-    public static boolean spawnGuard() throws GameActionException {
-        return trySpawn(Direction.NORTH, RobotType.GUARD);
+    public static boolean spawnSoldier() throws GameActionException {
+        return trySpawn(Direction.NORTH, RobotType.SOLDIER);
     }
 
     // This method will attempt to spawn in the given direction (or as close to it as possible)
