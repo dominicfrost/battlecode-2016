@@ -66,7 +66,14 @@ public class GUARD {
     public static boolean attackSinceEnemiesNearby() throws GameActionException {
         if (hostileRobotsInAttackRange.length > 0) {
             if (rc.isWeaponReady()) {
-                rc.attackLocation(hostileRobotsInAttackRange[0].location);
+                for (RobotInfo r: hostileRobotsInAttackRange) {
+                    if (r.type != RobotType.ZOMBIEDEN) {
+                        rc.attackLocation(r.location);
+                    }
+                }
+                for (RobotInfo r: hostileRobotsInAttackRange) {
+                    rc.attackLocation(r.location);
+                }
             }
             return true;
         }
@@ -125,7 +132,6 @@ public class GUARD {
         MapLocation closestAOI = null;
         double distToAOI;
         MapLocation aoi;
-        int goalType = 0;
 
         for (Signal s: scoutSignals) {
             msg = s.getMessage();
@@ -136,7 +142,6 @@ public class GUARD {
                 if (distToAOI < closestAOIDist) {
                     closestAOIDist = distToAOI;
                     closestAOI = aoi;
-                    goalType = msg[0];
                 }
             }
         }
