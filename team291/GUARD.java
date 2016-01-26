@@ -138,7 +138,7 @@ public class GUARD {
             }
         }
 
-        return closestAOI != null && goalType == Utils.MessageType.DEN.ordinal() ? Utils.moveThrough(myLocation, myLocation.directionTo(closestAOI)): Utils.tryMove(myLocation.directionTo(closestAOI));
+        return closestAOI != null && Utils.moveThrough(myLocation, myLocation.directionTo(closestAOI));
     }
 
     public static void execute() {
