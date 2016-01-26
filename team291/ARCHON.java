@@ -163,7 +163,7 @@ public class ARCHON {
 
             }
 
-            if (spawnFate < getTurretSpawnThreshold()) {
+            if (spawnFate < spawnThreshold_1to2_10to1_fast()) {
                  if (spawnTurret()) {
                      spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
                      return true;
@@ -186,11 +186,56 @@ public class ARCHON {
 
     // changes the ratio of turrets spawned as the game progresses
     // at the beginning of the game, we spawn 1:2, and at the end 10:1
-    public static int getTurretSpawnThreshold() {
+    public static int spawnThreshold_1to2_10to1_fast() {
+        float totalPercentages = 95;
+        double roundPercent = Math.min(rc.getRoundNum() / (totalRounds / 2), 1);
+        // 33% -> 90%
+        return (int) (totalPercentages * (.33 + (.57 * roundPercent)));
+    }
+
+    // changes the ratio of turrets spawned as the game progresses
+    // at the beginning of the game, we spawn 1:2, and at the end 10:1
+    public static int spawnThreshold_1to2_10to1_slow() {
         float totalPercentages = 95;
         double roundPercent = Math.min(rc.getRoundNum() / totalRounds, 1);
         // 33% -> 90%
         return (int) (totalPercentages * (.33 + (.57 * roundPercent)));
+    }
+
+    // changes the ratio of turrets spawned as the game progresses
+    // at the beginning of the game, we spawn 1:2, and at the end 5:1
+    public static int spawnThreshold_1to2_5to1_fast() {
+        float totalPercentages = 95;
+        double roundPercent = Math.min(rc.getRoundNum() / (totalRounds / 2), 1);
+        // 33% -> 80%
+        return (int) (totalPercentages * (.33 + (.47 * roundPercent)));
+    }
+
+    // changes the ratio of turrets spawned as the game progresses
+    // at the beginning of the game, we spawn 1:2, and at the end 5:1
+    public static int spawnThreshold_1to2_5to1_slow() {
+        float totalPercentages = 95;
+        double roundPercent = Math.min(rc.getRoundNum() / totalRounds, 1);
+        // 33% -> 80%
+        return (int) (totalPercentages * (.33 + (.47 * roundPercent)));
+    }
+
+    // changes the ratio of turrets:guards spawned as the game progresses
+    // at the beginning of the game, we spawn 1:2, and at the end 2:1
+    public static int spawnThreshold_1to2_2to1_fast() {
+        float totalPercentages = 95;
+        double roundPercent = Math.min(rc.getRoundNum() / (totalRounds / 2), 1);
+        // 33% -> 66%
+        return (int) (totalPercentages * (.33 + (.34 * roundPercent)));
+    }
+
+    // changes the ratio of turrets:guards spawned as the game progresses
+    // at the beginning of the game, we spawn 1:2, and at the end 2:1
+    public static int spawnThreshold_1to2_2to1_slow() {
+        float totalPercentages = 95;
+        double roundPercent = Math.min(rc.getRoundNum() / totalRounds, 1);
+        // 33% -> 66%
+        return (int) (totalPercentages * (.33 + (.34 * roundPercent)));
     }
 
     public static boolean activate() throws GameActionException {
@@ -359,7 +404,7 @@ public class ARCHON {
     public static void execute() {
         rc = RobotPlayer.rc;
         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-        totalRounds = (rc.getRoundLimit() / 2.0);
+        totalRounds = rc.getRoundLimit();
         while (true) {
             try {
                 doTurn();
