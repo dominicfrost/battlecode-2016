@@ -18,9 +18,12 @@ public class ARCHON {
     private static int aoiType;
 
     private static int spawnFate = -1;
+    private static boolean hasSpawnedInitialGuard = false;
 
     private static ArrayDeque<MapLocation> seen = new ArrayDeque<>();
     private static ArrayDeque<MapLocation> unreachableAOIs = new ArrayDeque<>();
+
+    private static double totalRounds;
 
     public static enum ArchonState {
         NONE,
@@ -148,15 +151,30 @@ public class ARCHON {
 
     public static boolean spawn() throws GameActionException {
         if (rc.hasBuildRequirements(RobotType.TURRET)) {
-            if (spawnFate < 60) {
+            if (!hasSpawnedInitialGuard) {
+                if (spawnGuard()) {
+                    hasSpawnedInitialGuard = true;
+                    return true;
+                }
+                return false;
+            }
+
+            if (spawnFate < 5) {
+                if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
+                    spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+                    return true;
+                }
+                return false;
+
+            }
+
+            if (spawnFate < getTurretSpawnThreshold()) {
                  if (spawnTurret()) {
                      spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
                      return true;
                  }
                  return false;
-            }
-
-            if (spawnFate < 95) {
+            } else {
                  if (spawnGuard()) {
                      spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
                      return true;
@@ -164,26 +182,27 @@ public class ARCHON {
                  return false;
             }
 
-            if (spawnFate < 100) {
-                 if (trySpawn(Direction.NORTH, RobotType.SCOUT)) {
-                     spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
-                     return true;
-                 }
-                 return false;
 
-            }
         }
 
         return false;
     }
 
+
+    // changes the ratio of turrets spawned as the game progresses
+    // at the beginning of the game, we spawn 1:2, and at the end 10:1
+    public static int getTurretSpawnThreshold() {
+        float totalPercentages = 95;
+        double roundPercent = Math.min(rc.getRoundNum() / totalRounds, 1);
+        // 33% -> 90%
+        return (int) (totalPercentages * (.33 + (.57 * roundPercent)));
+    }
+
     public static boolean activate() throws GameActionException {
-        RobotInfo[] neutrals = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, Team.NEUTRAL);
-        for (RobotInfo r : neutrals) {
-            if (r.location.distanceSquaredTo(myLocation) < 2) {
-                rc.activate(r.location);
-                return true;
-            }
+        RobotInfo[] neutrals = rc.senseNearbyRobots(2, Team.NEUTRAL);
+        if (neutrals.length > 0) {
+            rc.activate(neutrals[0].location);
+            return true;
         }
         return false;
     }
@@ -348,6 +367,7 @@ public class ARCHON {
     public static void execute() {
         rc = RobotPlayer.rc;
         spawnFate = Math.abs(RobotPlayer.rand.nextInt() % 100);
+        totalRounds = (rc.getRoundLimit() / 2.0);
         while (true) {
             try {
                 doTurn();
