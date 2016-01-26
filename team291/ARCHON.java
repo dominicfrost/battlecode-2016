@@ -21,7 +21,6 @@ public class ARCHON {
     private static boolean hasSpawnedInitialGuard = false;
 
     private static ArrayDeque<MapLocation> seen = new ArrayDeque<>();
-    private static ArrayDeque<MapLocation> unreachableAOIs = new ArrayDeque<>();
 
     private static double totalRounds;
 
@@ -41,6 +40,8 @@ public class ARCHON {
         nearbyAllies = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam);
         nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
+
+        repair();
         switch (state) {
             case NONE:
                 getRallyLocation();
@@ -54,7 +55,6 @@ public class ARCHON {
                     if (shouldFlee()) break;
                     if (spawn()) break;
                     if (moveToParts()) break;
-                    if (repair()) break;
                     if (activate()) break;
                 }
                 chill();
@@ -64,10 +64,7 @@ public class ARCHON {
                 break;
             case REPORTING_TO_AOI:
                 if (isCoreReady) {
-                    if (shouldFlee()) {
-                        state = ArchonState.RETURING_TO_RALLY;
-                        break;
-                    }
+                    if (shouldFlee()) break;
                     if (activate()) break;
                     if (moveToParts()) break;
                 }
@@ -85,7 +82,6 @@ public class ARCHON {
             case HIDING_FROM_THE_ZOMBIE_SPAWN_LIKE_A_BITCH:
                 if (isCoreReady) {
                     if (shouldFlee()) break;
-                    if (repair()) break;
                     Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint));
                 }
                 break;
@@ -109,7 +105,6 @@ public class ARCHON {
             returnToRally();
             return;
         }
-
         if (isCoreReady) {
             if (Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(rallyPoint), seen)) {
                 seen.add(myLocation);
@@ -255,10 +250,8 @@ public class ARCHON {
                 if (msg[0] == Utils.MessageType.PART_LOCATION.ordinal() || msg[0] == Utils.MessageType.NEUTRAL_ROBOT_LOCATION.ordinal()) {
                     aoiType = msg[0];
                     aoi = Utils.deserializeMapLocation(msg[1]);
-                    if (!unreachableAOIs.contains(aoi)) {
-                        state = ArchonState.REPORTING_TO_AOI;
-                        return;
-                    }
+                    state = ArchonState.REPORTING_TO_AOI;
+                    return;
                 }
             }
 
@@ -294,13 +287,12 @@ public class ARCHON {
         if (isCoreReady) {
             Direction d = Bug.startBuggin(aoi, myLocation, 0);
             if (d != Direction.NONE && d != Direction.OMNI) {
-                rc.move(d);
+                Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, d);
             } else if (d == Direction.OMNI) {
                 Utils.moveInDirToLeastDamage(nearbyEnemies, myLocation, myLocation.directionTo(aoi));
             } else if (d == Direction.NONE) {
                 state = ArchonState.RETURING_TO_RALLY;
                 returnToRally();
-                unreachableAOIs.add(aoi);
             }
         }
     }

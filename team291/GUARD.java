@@ -28,64 +28,36 @@ public class GUARD {
         hostileRobots = rc.senseHostileRobots(rc.getLocation(), RobotPlayer.rt.sensorRadiusSquared);
         hostileRobotsInAttackRange = rc.senseHostileRobots(rc.getLocation(), RobotPlayer.rt.attackRadiusSquared);
 
-        if (state != GuardStates.HURT && rc.isInfected() && rc.getHealth() < RobotPlayer.rt.maxHealth / 4) {
+        int hurtCount = 1;
+        if (state != GuardStates.AGGRO) {
+            RobotInfo[] nearbyAllies = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam);
+            for (RobotInfo ally: nearbyAllies) {
+                if (ally.health < ally.maxHealth / 4) {
+                    hurtCount++;
+                }
+            }
+        }
+
+
+        if (state != GuardStates.HURT && rc.getHealth() < RobotPlayer.rt.maxHealth / 4) {
             state = GuardStates.HURT;
-        } else if (state != GuardStates.AGGRO && (!rc.isInfected() || rc.getHealth() == RobotPlayer.rt.maxHealth)){
+        } else if (state != GuardStates.AGGRO &&  (rc.getHealth() == RobotPlayer.rt.maxHealth || (hurtCount > 5 && rc.getHealth() >= RobotPlayer.rt.maxHealth * .75))){
             state = GuardStates.AGGRO;
         }
 
-//        Utils.getDistressSignal();
-
-//        if (moveToRallySinceWeak()) return;
-        if (attackSinceEnemiesNearby()) return;
-        if (doMicro()) return;
-        if (flee()) return;
-        if (moveToAOI()) return;
-        patrolPerimeter();
 
         // TODO: Clear that debris
-//        if (fleeSinceWeekAndEnemiesNearby()) return;
-//        if (moveToRallySinceWeak()) return;
-//        if (attackSinceEnemiesNearby()) return;
-//        if (advanceSinceEnemiesSensed()) return;
-//        if (moveToAOI()) return;
-//        if (clearNearbyRubble()) return;
-//        // TODO: move towards distress call
-//        patrolPerimeter();
+        if (moveToRallySinceWeak()) return;
+        if (attackSinceEnemiesNearby()) return;
+        if (advanceSinceEnemiesSensed()) return;
+        if (moveToAOI()) return;
+        if (clearNearbyRubble()) return;
+        patrolPerimeter();
     }
 
-    public static boolean doMicro() throws GameActionException {
-        RobotInfo toAttack = Utils.micro(myLocation, hostileRobots, rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam));
-        if (toAttack == null) {
-            return false;
-        }
-
-        System.out.println("A ROUND IS " + rc.getRoundNum() + " BYTECODES LEFT " + Clock.getBytecodesLeft());
-        Direction dirToEnemy = myLocation.directionTo(toAttack.location);
-        System.out.println("B ROUND IS " + rc.getRoundNum() + " BYTECODES LEFT " + Clock.getBytecodesLeft());
-        if (rc.canMove(dirToEnemy)) {
-            rc.move(dirToEnemy);
-            return true;
-        }
-        return false;
-    }
-
-    public static boolean flee() throws GameActionException {
-        return Utils.shouldFlee(hostileRobots, myLocation) && Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(rallyPoint));
-    }
-
-    public static boolean fleeSinceWeekAndEnemiesNearby() throws GameActionException {
-        if (hostileRobotsInAttackRange.length > 0 && state == GuardStates.HURT) {
-            return Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(rallyPoint));
-        }
-        return false;
-    }
 
     public static boolean moveToRallySinceWeak() throws GameActionException {
-        if (state == GuardStates.HURT) {
-            return Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(rallyPoint));
-        }
-        return false;
+        return state == GuardStates.HURT && Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(rallyPoint));
     }
 
     public static boolean attackSinceEnemiesNearby() throws GameActionException {
@@ -103,13 +75,14 @@ public class GUARD {
             int closestDistance  = 999999;
             RobotInfo closestEnemy = hostileRobots[0];
             for (RobotInfo enemyRobot: hostileRobots) {
+                if (!Utils.shouldProgress(myLocation, enemyRobot.location)) continue;
                 int distanceToRobot = myLocation.distanceSquaredTo(enemyRobot.location);
                 if (distanceToRobot < closestDistance) {
                     closestDistance = distanceToRobot;
                     closestEnemy = enemyRobot;
                 }
             }
-            return Utils.moveThrough(myLocation, myLocation.directionTo(closestEnemy.location));
+            return Utils.tryMove(myLocation.directionTo(closestEnemy.location));
         }
         return false;
     }
@@ -149,20 +122,23 @@ public class GUARD {
         MapLocation closestAOI = null;
         double distToAOI;
         MapLocation aoi;
+        int goalType = 0;
 
         for (Signal s: scoutSignals) {
             msg = s.getMessage();
             if (msg[0] == Utils.MessageType.DEN.ordinal() || msg[0] == Utils.MessageType.ENEMY.ordinal()) {
                 aoi = Utils.deserializeMapLocation(msg[1]);
+                if (msg[0] == Utils.MessageType.ENEMY.ordinal() && !Utils.shouldProgress(myLocation, aoi)) continue;
                 distToAOI = myLocation.distanceSquaredTo(aoi);
                 if (distToAOI < closestAOIDist) {
                     closestAOIDist = distToAOI;
                     closestAOI = aoi;
+                    goalType = msg[0];
                 }
             }
         }
 
-        return closestAOI != null && Utils.moveThrough(myLocation, myLocation.directionTo(closestAOI));
+        return closestAOI != null && goalType == Utils.MessageType.DEN.ordinal() ? Utils.moveThrough(myLocation, myLocation.directionTo(closestAOI)): Utils.tryMove(myLocation.directionTo(closestAOI));
     }
 
     public static void execute() {

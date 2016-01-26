@@ -133,10 +133,8 @@ public class Utils {
                 distanceAfterMovingTowards = loc.distanceSquaredTo(robot.location.add(robot.location.directionTo(loc)));
             }
 
-            int attackRad = robot.type.attackRadiusSquared;
-
             // if he moved towards me could he hit me???
-            if (distanceAfterMovingTowards <= attackRad) return true;
+            if (distanceAfterMovingTowards <= robot.type.attackRadiusSquared) return true;
         }
 
         return false;
@@ -151,7 +149,7 @@ public class Utils {
         RobotController rc = RobotPlayer.rc;
         d = Utils.dirToLeastDamage(nearbyEnemies, myLocation, d, seen);
 
-        if (d != Direction.NONE) {
+        if (d != Direction.NONE && rc.isCoreReady()) {
             rc.move(d);
             return true;
         }
@@ -222,6 +220,48 @@ public class Utils {
                 }
             }
         }
+
+        offsetIndex = 0;
+        dirint = directionToInt(d);
+        while (offsetIndex < 8) {
+            d = RobotPlayer.directions[(dirint+offsets[offsetIndex]+8)%8];
+            offsetIndex++;
+
+            desiredLoc = myLocation.add(d);
+            repeateLocation = false;
+
+            if (seen != null) {
+                for (MapLocation m : seen) {
+                    repeateLocation = m.equals(desiredLoc);
+                    if (repeateLocation) {
+                        break;
+                    }
+                }
+
+                if (repeateLocation) {
+                    continue;
+                }
+            }
+
+            if (rc.canMove(d)) {
+
+                damageOnLoc = 0;
+
+                //iterate through each enemy bot
+                for (RobotInfo robot : enemyRobots) {
+                    //could he hit me if he moved in
+                    if (desiredLoc.distanceSquaredTo(robot.location) <= robot.type.attackRadiusSquared) {
+                        // could he out chase me if i fled to where he cant hit me now?
+                        damageOnLoc += robot.type.attackPower;
+                    }
+                }
+
+                if (damageOnLoc == 0) {
+                    return d;
+                }
+            }
+        }
+
         return dirToMinDamage;
     }
 
@@ -383,58 +423,12 @@ public class Utils {
         return  true;
     }
 
-    public static RobotInfo micro(MapLocation myLocation, RobotInfo[] nearbyEnemies, RobotInfo[] nearbyAllies) throws GameActionException {
-        double allyDmg;
-        double enemyDmg;
-        MapLocation nextLocation;
-        int moves, allyMoves;
-
-        for (RobotInfo enemy: nearbyEnemies) {
-            if (!shouldProgress(myLocation, enemy.location)) {
-                continue;
-            }
-
-            for (RobotInfo e: nearbyEnemies) {
-                allyDmg = 0;
-                enemyDmg = 0;
-
-                nextLocation = myLocation;
-                moves = 0;
-                while (!nextLocation.equals(e.location)) {
-                    allyDmg += nextLocation.distanceSquaredTo(e.location) <= RobotPlayer.rt.attackRadiusSquared ? RobotPlayer.rt.attackPower : 0;
-                    enemyDmg += nextLocation.distanceSquaredTo(e.location) <= e.type.attackRadiusSquared ? e.type.attackPower : 0;
-                    nextLocation = nextLocation.add(nextLocation.directionTo(e.location));
-                    moves++;
-                }
-
-                for (RobotInfo a: nearbyAllies) {
-                    if (!a.type.canAttack()) continue;
-
-                    allyMoves = 0;
-                    nextLocation = a.location;
-                    while (allyMoves < moves) {
-                        allyDmg += nextLocation.distanceSquaredTo(e.location) <= a.type.attackRadiusSquared ? a.type.attackPower : 0;
-                        enemyDmg += nextLocation.distanceSquaredTo(e.location) <= e.type.attackRadiusSquared ? e.type.attackPower : 0;
-                        if (a.type.canMove()) {
-                            nextLocation = nextLocation.add(nextLocation.directionTo(e.location));
-                        }
-                        allyMoves++;
-                    }
-                }
-
-                if (allyDmg > enemyDmg) return e;
-            }
-        }
-
-        return null;
-    }
-
     public static boolean shouldProgress(MapLocation myLocation, MapLocation enemyLocation) throws GameActionException {
         RobotController rc = RobotPlayer.rc;
         MapLocation nextLocation = myLocation;
         while (!nextLocation.equals(enemyLocation)) {
             nextLocation = nextLocation.add(nextLocation.directionTo(enemyLocation));
-            if (rc.senseRubble(nextLocation) > 50 || rc.isLocationOccupied(nextLocation)) {
+            if (rc.senseRubble(nextLocation) > 50 ) {
                 return false;
             }
         }
