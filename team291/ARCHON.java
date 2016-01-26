@@ -56,8 +56,8 @@ public class ARCHON {
             case CHILLIN_AT_RALLY:
                 if (isCoreReady) {
                     if (shouldFlee()) break;
-                    if (spawn()) break;
                     if (activate()) break;
+                    if (spawn()) break;
                     if (moveToParts()) break;
                 }
                 chill();
@@ -210,6 +210,7 @@ public class ARCHON {
                 return true;
             }
         }
+
         return false;
     }
 
