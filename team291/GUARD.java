@@ -69,13 +69,12 @@ public class GUARD {
                 for (RobotInfo r: hostileRobotsInAttackRange) {
                     if (r.type != RobotType.ZOMBIEDEN) {
                         rc.attackLocation(r.location);
+                        return true;
                     }
                 }
-                for (RobotInfo r: hostileRobotsInAttackRange) {
-                    rc.attackLocation(r.location);
-                }
+                rc.attackLocation(hostileRobotsInAttackRange[0].location);
+                return true;
             }
-            return true;
         }
         return false;
     }
@@ -85,7 +84,6 @@ public class GUARD {
             int closestDistance  = 999999;
             RobotInfo closestEnemy = hostileRobots[0];
             for (RobotInfo enemyRobot: hostileRobots) {
-                if (!Utils.shouldProgress(myLocation, enemyRobot.location)) continue;
                 int distanceToRobot = myLocation.distanceSquaredTo(enemyRobot.location);
                 if (distanceToRobot < closestDistance) {
                     closestDistance = distanceToRobot;
@@ -137,7 +135,7 @@ public class GUARD {
             msg = s.getMessage();
             if (msg[0] == Utils.MessageType.DEN.ordinal() || msg[0] == Utils.MessageType.ENEMY.ordinal()) {
                 aoi = Utils.deserializeMapLocation(msg[1]);
-                if (msg[0] == Utils.MessageType.ENEMY.ordinal() && !Utils.shouldProgress(myLocation, aoi)) continue;
+                if (msg[0] == Utils.MessageType.ENEMY.ordinal() ) continue;
                 distToAOI = myLocation.distanceSquaredTo(aoi);
                 if (distToAOI < closestAOIDist) {
                     closestAOIDist = distToAOI;
@@ -145,7 +143,6 @@ public class GUARD {
                 }
             }
         }
-
         return closestAOI != null && Utils.moveThrough(myLocation, myLocation.directionTo(closestAOI));
     }
 

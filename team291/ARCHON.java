@@ -41,6 +41,8 @@ public class ARCHON {
         nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
         signals = Utils.getScoutSignals(rc.emptySignalQueue());
 
+        rc.setIndicatorString(0, state.name());
+        if (aoi != null) rc.setIndicatorString(1, aoi.toString());
         repair();
         switch (state) {
             case NONE:

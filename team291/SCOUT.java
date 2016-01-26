@@ -15,6 +15,7 @@ public class SCOUT {
     public static MapLocation myLocation;
     public static Signal[] signals;
     public static ArrayDeque<Signal> scoutSignals;
+    public static MapLocation[] sigLocs;
     private static boolean isCoreReady;
 
     // scout state
@@ -37,6 +38,14 @@ public class SCOUT {
         nearbyEnemies = rc.senseHostileRobots(myLocation, RobotPlayer.rt.sensorRadiusSquared);
         signals = rc.emptySignalQueue();
         scoutSignals = Utils.getScoutSignals(signals);
+
+        sigLocs = new MapLocation[scoutSignals.size()];
+        int i  = 0;
+        for (Signal s: scoutSignals) {
+            sigLocs[i] = Utils.deserializeMapLocation(s.getMessage()[1]);
+            i++;
+        }
+
 
         switch (state) {
             case NONE:
@@ -61,6 +70,14 @@ public class SCOUT {
         return false;
     }
 
+    private static boolean sigLocsContains(MapLocation m) {
+        for (MapLocation s: sigLocs) {
+            if (s.equals(m)) return true;
+        }
+
+        return false;
+    }
+
 
     private static void searchForAOIs() throws GameActionException {
         int broadcastCount = 0;
@@ -72,12 +89,12 @@ public class SCOUT {
                 for (RobotInfo enemy : nearbyEnemies) {
                     if (enemy.type == RobotType.ZOMBIEDEN || enemy.coreDelay >= 1) {
                         dstSqr = r.location.distanceSquaredTo(enemy.location);
-                        if (dstSqr <= RobotType.TURRET.attackRadiusSquared && dstSqr > RobotType.TURRET.sensorRadiusSquared) {
+                        if (dstSqr <= RobotType.TURRET.attackRadiusSquared && dstSqr > RobotType.TURRET.sensorRadiusSquared && !sigLocsContains(enemy.location)) {
                             broadcastLandMark = Utils.MessageType.TURRET_TARGET;
                             goal = enemy.location;
                             rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
                             broadcastCount++;
-                            if (broadcastCount == 20) {
+                            if (broadcastCount == 10) {
                                 circle();
                                 return;
                             }
@@ -88,12 +105,12 @@ public class SCOUT {
         }
 
         for (RobotInfo r : nearbyEnemies) {
-            if (r.type != RobotType.ZOMBIEDEN) {
+            if (r.type != RobotType.ZOMBIEDEN && !sigLocsContains(r.location)) {
                 broadcastLandMark = Utils.MessageType.ENEMY;
                 goal = r.location;
                 rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
                 broadcastCount++;
-                if (broadcastCount == 20) {
+                if (broadcastCount == 10) {
                     circle();
                     return;
                 }
@@ -102,12 +119,12 @@ public class SCOUT {
 
 
         for (RobotInfo r : nearbyEnemies) {
-            if (r.type == RobotType.ZOMBIEDEN) {
+            if (r.type == RobotType.ZOMBIEDEN && !sigLocsContains(r.location)) {
                 broadcastLandMark = Utils.MessageType.DEN;
                 goal = r.location;
                 rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
                 broadcastCount++;
-                if (broadcastCount == 20) {
+                if (broadcastCount == 10) {
                     circle();
                     return;
                 }
@@ -116,12 +133,12 @@ public class SCOUT {
 
         MapLocation[] partLocations = rc.sensePartLocations(RobotPlayer.rt.sensorRadiusSquared);
         for (MapLocation m : partLocations) {
-            if (rc.senseRubble(m) < 100 && !Utils.isSurrounded(m)) {
+            if (rc.senseRubble(m) < 100 && !Utils.isSurrounded(m) && !rc.isLocationOccupied(m) && !sigLocsContains(m)) {
                 broadcastLandMark = Utils.MessageType.PART_LOCATION;
                 goal = m;
                 rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
                 broadcastCount++;
-                if (broadcastCount == 20) {
+                if (broadcastCount == 10) {
                     circle();
                     return;
                 }
@@ -132,11 +149,11 @@ public class SCOUT {
         if (neutrals.length > 0) {
             broadcastLandMark = Utils.MessageType.NEUTRAL_ROBOT_LOCATION;
             for (RobotInfo neutral: neutrals) {
-                if (!Utils.isSurrounded(neutral.location)) {
+                if (!Utils.isSurrounded(neutral.location)&& !sigLocsContains(neutral.location)) {
                     goal = neutral.location;
                     rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
                     broadcastCount++;
-                    if (broadcastCount == 20) {
+                    if (broadcastCount == 10) {
                         circle();
                         return;
                     }
@@ -148,6 +165,7 @@ public class SCOUT {
     }
 
     public static boolean circle() throws GameActionException {
+        if (!rc.isCoreReady()) return false;
         circler.setCircleRadius(Math.max(Utils.distanceSquaredToPerimeter() + 9, RobotPlayer.rt.sensorRadiusSquared));
         return circler.circle(nearbyEnemies, myLocation);
     }

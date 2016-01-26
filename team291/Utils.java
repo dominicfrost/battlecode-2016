@@ -423,19 +423,6 @@ public class Utils {
         return  true;
     }
 
-    public static boolean shouldProgress(MapLocation myLocation, MapLocation enemyLocation) throws GameActionException {
-        RobotController rc = RobotPlayer.rc;
-        MapLocation nextLocation = myLocation;
-        while (!nextLocation.equals(enemyLocation)) {
-            nextLocation = nextLocation.add(nextLocation.directionTo(enemyLocation));
-            if (rc.senseRubble(nextLocation) > 50 ) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
     public static int getLeft(int field) {
         return field >> 16; // sign bit is significant
     }
