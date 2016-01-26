@@ -36,33 +36,54 @@ public class GUARD {
 
 //        Utils.getDistressSignal();
 
-        // TODO: Clear that debris
-        if (fleeSinceWeekAndEnemiesNearby()) return;
-        if (moveToRallySinceWeak()) return;
+//        if (moveToRallySinceWeak()) return;
         if (attackSinceEnemiesNearby()) return;
-        if (advanceSinceEnemiesSensed()) return;
+        if (doMicro()) return;
+        if (flee()) return;
         if (moveToAOI()) return;
-        if (clearNearbyRubble()) return;
-        // TODO: move towards distress call
         patrolPerimeter();
+
+        // TODO: Clear that debris
+//        if (fleeSinceWeekAndEnemiesNearby()) return;
+//        if (moveToRallySinceWeak()) return;
+//        if (attackSinceEnemiesNearby()) return;
+//        if (advanceSinceEnemiesSensed()) return;
+//        if (moveToAOI()) return;
+//        if (clearNearbyRubble()) return;
+//        // TODO: move towards distress call
+//        patrolPerimeter();
+    }
+
+    public static boolean doMicro() throws GameActionException {
+        RobotInfo toAttack = Utils.micro(myLocation, hostileRobots, rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, RobotPlayer.myTeam));
+        if (toAttack == null) {
+            return false;
+        }
+
+        System.out.println("A ROUND IS " + rc.getRoundNum() + " BYTECODES LEFT " + Clock.getBytecodesLeft());
+        Direction dirToEnemy = myLocation.directionTo(toAttack.location);
+        System.out.println("B ROUND IS " + rc.getRoundNum() + " BYTECODES LEFT " + Clock.getBytecodesLeft());
+        if (rc.canMove(dirToEnemy)) {
+            rc.move(dirToEnemy);
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean flee() throws GameActionException {
+        return Utils.shouldFlee(hostileRobots, myLocation) && Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(rallyPoint));
     }
 
     public static boolean fleeSinceWeekAndEnemiesNearby() throws GameActionException {
         if (hostileRobotsInAttackRange.length > 0 && state == GuardStates.HURT) {
-            Direction toMove = Utils.flee(rc, hostileRobots, myLocation);
-            if (toMove != Direction.NONE) {
-                rc.move(toMove);
-                return true;
-            }
+            return Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(rallyPoint));
         }
         return false;
     }
 
     public static boolean moveToRallySinceWeak() throws GameActionException {
         if (state == GuardStates.HURT) {
-            // move towards rally
-            Utils.tryMove(myLocation.directionTo(rallyPoint));
-            return true;
+            return Utils.moveInDirToLeastDamage(hostileRobots, myLocation, myLocation.directionTo(rallyPoint));
         }
         return false;
     }

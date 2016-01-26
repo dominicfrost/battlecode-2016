@@ -383,6 +383,65 @@ public class Utils {
         return  true;
     }
 
+    public static RobotInfo micro(MapLocation myLocation, RobotInfo[] nearbyEnemies, RobotInfo[] nearbyAllies) throws GameActionException {
+        double allyDmg;
+        double enemyDmg;
+        MapLocation nextLocation;
+        int moves, allyMoves;
+
+        for (RobotInfo enemy: nearbyEnemies) {
+            if (!shouldProgress(myLocation, enemy.location)) {
+                continue;
+            }
+
+            for (RobotInfo e: nearbyEnemies) {
+                allyDmg = 0;
+                enemyDmg = 0;
+
+                nextLocation = myLocation;
+                moves = 0;
+                while (!nextLocation.equals(e.location)) {
+                    allyDmg += nextLocation.distanceSquaredTo(e.location) <= RobotPlayer.rt.attackRadiusSquared ? RobotPlayer.rt.attackPower : 0;
+                    enemyDmg += nextLocation.distanceSquaredTo(e.location) <= e.type.attackRadiusSquared ? e.type.attackPower : 0;
+                    nextLocation = nextLocation.add(nextLocation.directionTo(e.location));
+                    moves++;
+                }
+
+                for (RobotInfo a: nearbyAllies) {
+                    if (!a.type.canAttack()) continue;
+
+                    allyMoves = 0;
+                    nextLocation = a.location;
+                    while (allyMoves < moves) {
+                        allyDmg += nextLocation.distanceSquaredTo(e.location) <= a.type.attackRadiusSquared ? a.type.attackPower : 0;
+                        enemyDmg += nextLocation.distanceSquaredTo(e.location) <= e.type.attackRadiusSquared ? e.type.attackPower : 0;
+                        if (a.type.canMove()) {
+                            nextLocation = nextLocation.add(nextLocation.directionTo(e.location));
+                        }
+                        allyMoves++;
+                    }
+                }
+
+                if (allyDmg > enemyDmg) return e;
+            }
+        }
+
+        return null;
+    }
+
+    public static boolean shouldProgress(MapLocation myLocation, MapLocation enemyLocation) throws GameActionException {
+        RobotController rc = RobotPlayer.rc;
+        MapLocation nextLocation = myLocation;
+        while (!nextLocation.equals(enemyLocation)) {
+            nextLocation = nextLocation.add(nextLocation.directionTo(enemyLocation));
+            if (rc.senseRubble(nextLocation) > 50 || rc.isLocationOccupied(nextLocation)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     public static int getLeft(int field) {
         return field >> 16; // sign bit is significant
     }
