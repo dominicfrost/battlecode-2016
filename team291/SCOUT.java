@@ -117,6 +117,21 @@ public class SCOUT {
             }
         }
 
+        RobotInfo[] neutrals = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, Team.NEUTRAL);
+        if (neutrals.length > 0) {
+            broadcastLandMark = Utils.MessageType.NEUTRAL_ROBOT_LOCATION;
+            for (RobotInfo neutral: neutrals) {
+                if (!Utils.isSurrounded(neutral.location)&& !sigLocsContains(neutral.location)) {
+                    goal = neutral.location;
+                    rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
+                    broadcastCount++;
+                    if (broadcastCount == 10) {
+                        circle();
+                        return;
+                    }
+                }
+            }
+        }
 
         for (RobotInfo r : nearbyEnemies) {
             if (r.type == RobotType.ZOMBIEDEN && !sigLocsContains(r.location)) {
@@ -141,22 +156,6 @@ public class SCOUT {
                 if (broadcastCount == 10) {
                     circle();
                     return;
-                }
-            }
-        }
-
-        RobotInfo[] neutrals = rc.senseNearbyRobots(RobotPlayer.rt.sensorRadiusSquared, Team.NEUTRAL);
-        if (neutrals.length > 0) {
-            broadcastLandMark = Utils.MessageType.NEUTRAL_ROBOT_LOCATION;
-            for (RobotInfo neutral: neutrals) {
-                if (!Utils.isSurrounded(neutral.location)&& !sigLocsContains(neutral.location)) {
-                    goal = neutral.location;
-                    rc.broadcastMessageSignal(broadcastLandMark.ordinal(), Utils.serializeMapLocation(goal), RobotPlayer.maxSignalRange);
-                    broadcastCount++;
-                    if (broadcastCount == 10) {
-                        circle();
-                        return;
-                    }
                 }
             }
         }

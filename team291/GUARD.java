@@ -73,8 +73,8 @@ public class GUARD {
                     }
                 }
                 rc.attackLocation(hostileRobotsInAttackRange[0].location);
-                return true;
             }
+            return true; // don't make a move if can shoot someone now
         }
         return false;
     }

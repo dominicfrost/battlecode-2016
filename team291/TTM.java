@@ -16,6 +16,8 @@ public class TTM {
             if (rc.canMove(dirToGoal)) {
                 if (!rc.isCoreReady()) return false;
                 rc.move(dirToGoal);
+                goal = Utils.findBetterLocation(myLocation, rallyPoint);
+                if (goal != null) return false;
             }
         }
         rc.unpack();

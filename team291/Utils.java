@@ -149,7 +149,7 @@ public class Utils {
         RobotController rc = RobotPlayer.rc;
         d = Utils.dirToLeastDamage(nearbyEnemies, myLocation, d, seen);
 
-        if (d != Direction.NONE && rc.isCoreReady()) {
+        if (d != Direction.NONE && rc.isCoreReady() && rc.canMove(d)) {
             rc.move(d);
             return true;
         }
@@ -397,7 +397,7 @@ public class Utils {
 
     public static boolean shouldPutTurretOn(MapLocation myLocation, MapLocation rallyPoint, MapLocation potentialLoc) throws GameActionException {
       RobotController rc = RobotPlayer.rc;
-      return ((potentialLoc.x + potentialLoc.y) % 2) == 0 && !rc.isLocationOccupied(potentialLoc) && rc.onTheMap(potentialLoc) && rc.senseRubble(potentialLoc) < 50 && potentialLoc.distanceSquaredTo(rallyPoint) < myLocation.distanceSquaredTo(rallyPoint);
+      return ((potentialLoc.x + potentialLoc.y) % 2) == 0 && !rc.isLocationOccupied(potentialLoc) && rc.onTheMap(potentialLoc) && rc.senseRubble(potentialLoc) < 100 && potentialLoc.distanceSquaredTo(rallyPoint) < myLocation.distanceSquaredTo(rallyPoint);
     }
 
     public static MapLocation findBetterLocation(MapLocation initialLoc, MapLocation rallyPoint) throws GameActionException {

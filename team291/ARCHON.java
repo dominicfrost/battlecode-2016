@@ -50,14 +50,15 @@ public class ARCHON {
                 break;
             case MOVING_TO_RALLY:
                 if (isCoreReady && shouldFlee()) break;
+                if (isCoreReady && activate()) break;
                 returnToRally();
                 break;
             case CHILLIN_AT_RALLY:
                 if (isCoreReady) {
                     if (shouldFlee()) break;
                     if (spawn()) break;
-                    if (moveToParts()) break;
                     if (activate()) break;
+                    if (moveToParts()) break;
                 }
                 chill();
                 break;
@@ -119,7 +120,7 @@ public class ARCHON {
                 return;
             }
             for (Direction d : RobotPlayer.directions) {
-                if (rc.senseRobotAtLocation(myLocation.add(d)) != null && rc.onTheMap(myLocation.add(d))) {
+                if (rc.senseRobotAtLocation(myLocation.add(d)) == null && rc.onTheMap(myLocation.add(d))) {
                     Utils.moveThrough(myLocation, d);
                     return;
                 }
@@ -195,10 +196,19 @@ public class ARCHON {
     }
 
     public static boolean activate() throws GameActionException {
-        RobotInfo[] neutrals = rc.senseNearbyRobots(2, Team.NEUTRAL);
-        if (neutrals.length > 0) {
-            rc.activate(neutrals[0].location);
-            return true;
+        RobotInfo[] neutrals = rc.senseNearbyRobots(4, Team.NEUTRAL);
+
+        for (RobotInfo r: neutrals) {
+            if (myLocation.distanceSquaredTo(r.location) < 2) {
+                rc.activate(r.location);
+                return true;
+            }
+        }
+        for (RobotInfo r: neutrals) {
+            if (rc.canMove(myLocation.directionTo(r.location))) {
+                rc.move(myLocation.directionTo(r.location));
+                return true;
+            }
         }
         return false;
     }
